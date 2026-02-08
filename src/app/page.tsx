@@ -192,6 +192,84 @@ export default function Home() {
         </InfiniteMarquee>
       </section>
 
+      {/* --- TRENDING CATEGORIES --- */}
+      <section className="container">
+        <div style={{ marginBottom: '4rem', textAlign: 'center' }}>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            style={{ fontSize: '3rem', fontWeight: 800, marginBottom: '1rem', color: '#18181b' }}
+          >
+            Explore by <span style={{ color: '#9333ea' }}>Category</span>
+          </motion.h2>
+          <p style={{ color: '#71717a', fontSize: '1.2rem' }}>Find opportunities that match your expertise.</p>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem' }}>
+          {['Engineering', 'Design', 'Marketing', 'Sales', 'Finance', 'HR', 'Product', 'Legal'].map((cat, i) => (
+            <motion.div
+              key={cat}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ delay: i * 0.05 }}
+              whileHover={{ scale: 1.05, background: 'var(--primary)', color: 'white' }}
+              style={{
+                padding: '2rem 1rem',
+                borderRadius: '16px',
+                background: 'white',
+                border: '1px solid #e4e4e7',
+                textAlign: 'center',
+                cursor: 'pointer',
+                boxShadow: '0 4px 6px rgba(0,0,0,0.02)',
+                transition: 'all 0.2s',
+                color: '#18181b',
+                fontWeight: 600
+              }}
+            >
+              {cat}
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* --- HOW IT WORKS (TIMELINE) --- */}
+      <section style={{ padding: '6rem 0', background: '#18181b', color: 'white', overflow: 'hidden' }}>
+        <div className="container">
+          <div style={{ textAlign: 'center', marginBottom: '5rem' }}>
+            <h2 style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '1rem' }}>How it Works</h2>
+            <p style={{ color: '#a1a1aa', fontSize: '1.2rem' }}>Your journey to a new career in 3 simple steps.</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '4rem', position: 'relative' }}>
+            {/* Connector Line (Desktop Only) */}
+            <div className="desktop-only" style={{ position: 'absolute', top: '24px', left: '10%', right: '10%', height: '2px', background: 'rgba(255,255,255,0.1)', zIndex: 0 }} />
+
+            {[
+              { title: 'Create Profile', desc: 'Sign up and build your robust professional profile in minutes.', icon: Users },
+              { title: 'Apply to Jobs', desc: 'Browse matched jobs and apply with a single click.', icon: Zap },
+              { title: 'Get Hired', desc: 'Chat directly with founders and get hired fast.', icon: CheckCircle }
+            ].map((step, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.2 }}
+                style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}
+              >
+                <div style={{
+                  width: '48px', height: '48px', background: '#2563eb', borderRadius: '50%', margin: '0 auto 1.5rem',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(37,99,235,0.5)'
+                }}>
+                  <span style={{ fontWeight: 700, fontSize: '1.2rem' }}>{i + 1}</span>
+                </div>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem' }}>{step.title}</h3>
+                <p style={{ color: '#a1a1aa', lineHeight: 1.6 }}>{step.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* --- 3D CARDS SECTION --- */}
       <section className="container">
         <div style={{ marginBottom: '4rem' }}>
@@ -217,6 +295,61 @@ export default function Home() {
                 <JobCard {...job} />
               </motion.div>
             </TiltCard>
+          ))}
+        </div>
+      </section>
+
+      {/* --- TESTIMONIALS --- */}
+      <section style={{ padding: '6rem 0', background: '#fafafa' }}>
+        <div className="container" style={{ textAlign: 'center', marginBottom: '4rem' }}>
+          <h2 style={{ fontSize: '3rem', fontWeight: 800, color: '#18181b' }}>Success Stories</h2>
+        </div>
+        <div style={{ overflow: 'hidden' }}>
+          <motion.div
+            animate={{ x: ["0%", "-50%"] }}
+            transition={{ duration: 30, ease: 'linear', repeat: Infinity }}
+            style={{ display: 'flex', gap: '2rem', width: 'fit-content', padding: '0 2rem' }}
+          >
+            {[1, 2, 3, 4, 1, 2, 3, 4].map((id, i) => (
+              <div key={i} style={{
+                background: 'white', padding: '2rem', borderRadius: '20px', width: '350px',
+                flexShrink: 0, boxShadow: '0 4px 10px rgba(0,0,0,0.03)', border: '1px solid #e4e4e7'
+              }}>
+                <p style={{ fontStyle: 'italic', marginBottom: '1.5rem', color: '#52525b' }}>"I found my dream job in just 3 days using this platform. The AI matching is insanely accurate!"</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#d4d4d8' }} />
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#18181b' }}>Sarah Jenkins</div>
+                    <div style={{ fontSize: '0.85rem', color: '#71717a' }}>Product Designer @ Meta</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* --- FAQ SECTION --- */}
+      <section className="container" style={{ maxWidth: '800px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
+          <h2 style={{ fontSize: '3rem', fontWeight: 800, color: '#18181b' }}>Frequently Asked Questions</h2>
+        </div>
+        <div style={{ display: 'grid', gap: '1.5rem' }}>
+          {[
+            { q: "Is this platform free for job seekers?", a: "Yes! Job seekers can create a profile and apply to unlimited jobs completely free of charge." },
+            { q: "How does the AI matching work?", a: "Our proprietary algorithm analyzes your skills, experience, and preferences to match you with roles where you're most likely to succeed." },
+            { q: "Can I post jobs as a company?", a: "Absolutely. We offer competitive pricing for companies of all sizes. Check our Pricing page." }
+          ].map((item, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              style={{ background: 'white', borderRadius: '16px', border: '1px solid #e4e4e7', padding: '2rem' }}
+            >
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem', color: '#18181b' }}>{item.q}</h3>
+              <p style={{ color: '#71717a', lineHeight: 1.6 }}>{item.a}</p>
+            </motion.div>
           ))}
         </div>
       </section>

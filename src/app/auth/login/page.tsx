@@ -1,40 +1,80 @@
-import Link from 'next/link';
+"use client";
+
+import { useState, Suspense } from 'react';
+import { motion } from 'framer-motion';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
+import Link from 'next/link';
+import { signIn } from 'next-auth/react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-export const metadata = {
-    title: 'Login | Job Listing Portal',
-};
+function LoginForm() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const registered = searchParams.get('registered');
+    const [formData, setFormData] = useState({ email: '', password: '' });
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
-export default function LoginPage() {
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        const res = await signIn('credentials', {
+            redirect: false,
+            email: formData.email,
+            password: formData.password,
+        });
+
+        if (res?.error) {
+            setError('Invalid email or password');
+            setLoading(false);
+        } else {
+            router.push('/dashboard/candidate'); // Default redirect
+        }
+    };
+
     return (
-        <div style={{
-            minHeight: 'calc(100vh - var(--nav-height))',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '2rem',
-            backgroundColor: 'var(--muted)'
-        }}>
-            <div style={{
-                width: '100%',
-                maxWidth: '400px',
-                backgroundColor: 'var(--background)',
-                padding: '2.5rem',
-                borderRadius: 'var(--radius)',
-                border: '1px solid var(--border)',
-                boxShadow: 'var(--shadow-md)'
-            }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', padding: '2rem' }}>
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="card"
+                style={{
+                    width: '100%',
+                    maxWidth: '400px',
+                    padding: '2rem',
+                    backgroundColor: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-lg)',
+                    boxShadow: 'var(--shadow-lg)'
+                }}
+            >
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '0.5rem' }}>Welcome Back</h1>
-                    <p style={{ color: 'var(--muted-foreground)' }}>Sign in to your account</p>
+                    <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.5rem' }}>Welcome Back</h1>
+                    <p style={{ color: 'var(--muted-foreground)' }}>Login to access your dashboard</p>
                 </div>
 
-                <form style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                {registered && (
+                    <div style={{ padding: '0.75rem', marginBottom: '1rem', backgroundColor: '#D1FAE5', color: '#065F46', borderRadius: 'var(--radius)', fontSize: '0.875rem' }}>
+                        Account created! Please log in.
+                    </div>
+                )}
+
+                {error && (
+                    <div style={{ padding: '0.75rem', marginBottom: '1rem', backgroundColor: '#FEE2E2', color: '#991B1B', borderRadius: 'var(--radius)', fontSize: '0.875rem' }}>
+                        {error}
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                     <Input
                         label="Email Address"
                         type="email"
-                        placeholder="you@example.com"
+                        placeholder="john@example.com"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         required
                         autoComplete="email"
                     />
@@ -42,22 +82,36 @@ export default function LoginPage() {
                         label="Password"
                         type="password"
                         placeholder="••••••••"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                         required
                         autoComplete="current-password"
                     />
 
-                    <Button type="submit" style={{ width: '100%', marginTop: '0.5rem' }}>
-                        Sign In
+                    <Button type="submit" style={{ marginTop: '1rem', background: 'var(--gradient-primary)', border: 'none', boxShadow: 'var(--shadow-glow)' }} disabled={loading}>
+                        {loading ? 'Logging in...' : 'Log In'}
                     </Button>
                 </form>
 
-                <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.875rem' }}>
-                    <span style={{ color: 'var(--muted-foreground)' }}>Don't have an account? </span>
-                    <Link href="/auth/signup" style={{ color: 'var(--primary)', fontWeight: 500 }}>
+                <p style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--muted-foreground)', marginTop: '1.5rem' }}>
+                    Don't have an account?{' '}
+                    <Link href="/auth/signup" style={{ color: 'var(--primary)', fontWeight: 600 }}>
                         Sign up
                     </Link>
-                </div>
-            </div>
+                </p>
+            </motion.div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                Loading...
+            </div>
+        }>
+            <LoginForm />
+        </Suspense>
     );
 }

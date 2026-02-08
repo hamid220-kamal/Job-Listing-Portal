@@ -1,8 +1,5 @@
 import NextAuth, { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import bcrypt from 'bcryptjs';
-import dbConnect from '@/lib/mongodb';
-import User from '@/models/User';
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -13,30 +10,20 @@ export const authOptions: NextAuthOptions = {
                 password: { label: "Password", type: "password" }
             },
             async authorize(credentials) {
-                if (!credentials?.email || !credentials?.password) {
-                    throw new Error('Invalid credentials');
+                // Simulate network delay
+                await new Promise((resolve) => setTimeout(resolve, 500));
+
+                // Accept ANY credentials for UI demo purposes
+                if (credentials?.email && credentials?.password) {
+                    return {
+                        id: 'mock-user-id',
+                        name: 'Demo User',
+                        email: credentials.email,
+                        role: 'candidate', // Default mock role
+                        image: null,
+                    };
                 }
-
-                await dbConnect();
-
-                const user = await User.findOne({ email: credentials.email });
-
-                if (!user) {
-                    throw new Error('No user found');
-                }
-
-                const isValid = await bcrypt.compare(credentials.password, user.password);
-
-                if (!isValid) {
-                    throw new Error('Invalid password');
-                }
-
-                return {
-                    id: user._id.toString(),
-                    name: user.name,
-                    email: user.email,
-                    role: user.role, // Custom property
-                };
+                return null;
             }
         })
     ],

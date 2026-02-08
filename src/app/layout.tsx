@@ -4,6 +4,8 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import BottomNav from '@/components/BottomNav';
+import ScrollProgress from '@/components/ScrollProgress';
+import CustomCursor from '@/components/CustomCursor';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -20,6 +22,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className} style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <ScrollProgress />
+        <CustomCursor />
         <Navbar />
         <main style={{ flex: 1 }}>{children}</main>
         <Footer />

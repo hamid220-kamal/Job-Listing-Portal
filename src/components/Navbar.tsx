@@ -8,6 +8,7 @@ import Button from './Button';
 import { Search, Bell, Menu } from 'lucide-react';
 
 const navLinks = [
+    { name: 'Home', href: '/' },
     { name: 'Find Jobs', href: '/jobs' },
     { name: 'Companies', href: '/companies' },
     { name: 'Salaries', href: '/salaries' },

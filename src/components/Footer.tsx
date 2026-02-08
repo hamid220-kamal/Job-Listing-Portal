@@ -43,15 +43,15 @@ const footerLinks = [
 
 export default function Footer() {
     return (
-        <footer style={{ position: 'relative', overflow: 'hidden', background: '#09090b', color: 'white', borderTop: '1px solid #27272a' }}>
+        <footer className="footer-root">
             {/* Background Glow */}
             <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '500px', background: 'radial-gradient(circle at 50% 100%, rgba(37,99,235,0.1), transparent 70%)', pointerEvents: 'none' }} />
 
-            <div className="container" style={{ position: 'relative', zIndex: 1, padding: '6rem 0 2rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '4rem', marginBottom: '4rem' }}>
+            <div className="container footer-container">
+                <div className="footer-grid">
 
                     {/* Brand Column */}
-                    <div style={{ maxWidth: '300px' }}>
+                    <div className="footer-brand">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
@@ -80,7 +80,7 @@ export default function Footer() {
 
                     {/* Links Columns */}
                     {footerLinks.map((column, i) => (
-                        <div key={column.title}>
+                        <div key={column.title} className="footer-links">
                             <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1.5rem', color: 'white' }}>{column.title}</h4>
                             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                 {column.links.map((link) => (
@@ -100,7 +100,7 @@ export default function Footer() {
                     ))}
 
                     {/* Newsletter Column */}
-                    <div>
+                    <div className="footer-newsletter">
                         <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1.5rem', color: 'white' }}>Stay Updated</h4>
                         <p style={{ color: '#a1a1aa', fontSize: '0.9rem', marginBottom: '1.5rem' }}>
                             Join 50,000+ others and get the latest job trends and tips.
@@ -116,7 +116,8 @@ export default function Footer() {
                                     padding: '0.75rem',
                                     color: 'white',
                                     flex: 1,
-                                    outline: 'none'
+                                    outline: 'none',
+                                    minWidth: 0
                                 }}
                             />
                             <motion.button
@@ -141,7 +142,7 @@ export default function Footer() {
 
                 </div>
 
-                <div style={{ borderTop: '1px solid #27272a', paddingTop: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                <div className="footer-bottom">
                     <p style={{ color: '#71717a', fontSize: '0.875rem' }}>© {new Date().getFullYear()} JobPortal Inc. All rights reserved.</p>
                     <div style={{ display: 'flex', gap: '2rem' }}>
                         <Link href="/privacy" style={{ color: '#71717a', fontSize: '0.875rem', textDecoration: 'none' }}>Privacy Policy</Link>
@@ -149,6 +150,64 @@ export default function Footer() {
                     </div>
                 </div>
             </div>
+
+            <style jsx>{`
+                .footer-root {
+                    position: relative;
+                    overflow: hidden;
+                    background: #09090b;
+                    color: white;
+                    border-top: 1px solid #27272a;
+                }
+                .footer-container {
+                    position: relative;
+                    z-index: 1;
+                    padding: 6rem 0 2rem;
+                }
+                .footer-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 4rem;
+                    margin-bottom: 4rem;
+                }
+                .footer-brand {
+                    max-width: 300px;
+                }
+                .footer-bottom {
+                    border-top: 1px solid #27272a;
+                    padding-top: 2rem;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    flex-wrap: wrap;
+                    gap: 1rem;
+                }
+
+                @media (max-width: 768px) {
+                    .footer-container {
+                        padding: 4rem 1.5rem 2rem;
+                    }
+                    .footer-grid {
+                        grid-template-columns: 1fr; /* Stack vertically on mobile */
+                        gap: 3rem;
+                        text-align: center;
+                    }
+                    .footer-brand {
+                        max-width: 100%;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                    }
+                    .footer-links ul {
+                        align-items: center;
+                    }
+                    .footer-bottom {
+                        flex-direction: column;
+                        text-align: center;
+                        gap: 1.5rem;
+                    }
+                }
+            `}</style>
         </footer>
     );
 }

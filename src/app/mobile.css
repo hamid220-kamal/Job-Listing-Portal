@@ -1,0 +1,50 @@
+/* Mobile Overrides */
+@media (max-width: 768px) {
+
+    /* Typography Scaling */
+    html {
+        font-size: 14px;
+        /* Slightly smaller base size */
+    }
+
+    h1 {
+        font-size: 2.5rem !important;
+        line-height: 1.2 !important;
+    }
+
+    h2 {
+        font-size: 2rem !important;
+    }
+
+    p {
+        font-size: 1rem !important;
+    }
+
+    /* Layout Adjustments */
+    .container {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+
+    section {
+        padding: 4rem 0 !important;
+    }
+
+    /* Hide elements marked as desktop-only */
+    .desktop-only,
+    .mobile-hide {
+        display: none !important;
+    }
+
+    /* Stack Grids */
+    .steps-grid {
+        grid-template-columns: 1fr !important;
+        gap: 3rem !important;
+    }
+
+    /* Navbar Adjustments */
+    .nav-links {
+        display: none;
+        /* Hidden by default on mobile, handled by JS toggle */
+    }
+}

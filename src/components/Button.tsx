@@ -1,7 +1,7 @@
 import React, { ButtonHTMLAttributes } from 'react';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: 'primary' | 'secondary' | 'ghost';
+    variant?: 'primary' | 'secondary' | 'ghost' | 'outline';
     size?: 'sm' | 'md' | 'lg';
     children: React.ReactNode;
 }
@@ -42,6 +42,11 @@ export default function Button({
             backgroundColor: 'transparent',
             color: 'var(--muted-foreground)',
         },
+        outline: {
+            backgroundColor: 'transparent',
+            color: 'var(--foreground)',
+            border: '1px solid var(--border)',
+        }
     };
 
     const sizeStyles = {

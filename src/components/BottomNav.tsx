@@ -21,7 +21,7 @@ export default function BottomNav() {
             <motion.nav
                 initial={{ y: 100 }}
                 animate={{ y: 0 }}
-                transition={{ spring: { stiffness: 300, damping: 30 } }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className="mobile-only"
                 style={{
                     position: 'fixed',

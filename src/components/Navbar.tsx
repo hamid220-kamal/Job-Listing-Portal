@@ -14,7 +14,7 @@ const navLinks = [
     { name: 'Salaries', href: '/salaries' },
 ];
 
-function MagneticButton({ children, className, style }: { children: React.ReactNode, className?: string, style?: React.CSSProperties }) {
+function MagneticButton({ children, className, style, onClick }: { children: React.ReactNode, className?: string, style?: React.CSSProperties, onClick?: () => void }) {
     const ref = useRef<HTMLButtonElement>(null);
     const x = useMotionValue(0);
     const y = useMotionValue(0);
@@ -43,16 +43,20 @@ function MagneticButton({ children, className, style }: { children: React.ReactN
             onMouseLeave={handleMouseLeave}
             style={{ x: xSpring, y: ySpring, ...style }}
             className={className}
+            onClick={onClick}
         >
             {children}
         </motion.button>
     );
 }
 
+import { useAuth } from '@/context/AuthContext';
+
 export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const pathname = usePathname();
     const { scrollY } = useScroll();
+    const { user, logout } = useAuth();
 
     // Mouse Spotlight Logic
     const mouseX = useMotionValue(0);
@@ -218,16 +222,31 @@ export default function Navbar() {
                         </motion.button>
 
                         <div className="desktop-only" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                            <Link href="/auth/login">
-                                <MagneticButton style={{ fontSize: '0.95rem', padding: '0.75rem 1.5rem', background: 'transparent', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
-                                    Log in
-                                </MagneticButton>
-                            </Link>
-                            <Link href="/auth/signup">
-                                <MagneticButton style={{ fontSize: '0.95rem', padding: '0.75rem 1.75rem', background: '#ffffff', color: '#09090b', fontWeight: 700, borderRadius: '99px', border: 'none', cursor: 'pointer', boxShadow: '0 0 20px rgba(255,255,255,0.2)' }}>
-                                    Get Started
-                                </MagneticButton>
-                            </Link>
+                            {user ? (
+                                <>
+                                    <Link href={user.role === 'employer' ? '/dashboard/employer' : '/dashboard/candidate'}>
+                                        <MagneticButton style={{ fontSize: '0.95rem', padding: '0.75rem 1.5rem', background: 'transparent', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
+                                            Dashboard
+                                        </MagneticButton>
+                                    </Link>
+                                    <MagneticButton onClick={logout} style={{ fontSize: '0.95rem', padding: '0.75rem 1.75rem', background: '#DC2626', color: '#ffffff', fontWeight: 700, borderRadius: '99px', border: 'none', cursor: 'pointer', boxShadow: '0 0 20px rgba(220, 38, 38, 0.2)' }}>
+                                        Logout
+                                    </MagneticButton>
+                                </>
+                            ) : (
+                                <>
+                                    <Link href="/auth/login">
+                                        <MagneticButton style={{ fontSize: '0.95rem', padding: '0.75rem 1.5rem', background: 'transparent', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
+                                            Log in
+                                        </MagneticButton>
+                                    </Link>
+                                    <Link href="/auth/signup">
+                                        <MagneticButton style={{ fontSize: '0.95rem', padding: '0.75rem 1.75rem', background: '#ffffff', color: '#09090b', fontWeight: 700, borderRadius: '99px', border: 'none', cursor: 'pointer', boxShadow: '0 0 20px rgba(255,255,255,0.2)' }}>
+                                            Get Started
+                                        </MagneticButton>
+                                    </Link>
+                                </>
+                            )}
                         </div>
 
                         {/* Mobile Menu Icon */}

@@ -1,11 +1,35 @@
 "use client";
 
+import React from 'react';
 import FilterSidebar from '@/components/FilterSidebar';
-import JobCard from '@/components/JobCard';
-import { MOCK_JOBS } from '@/lib/mock_data';
+import dynamic from 'next/dynamic';
+// lazy load JobCard
+const JobCard = dynamic(() => import('@/components/JobCard'), {
+    loading: () => <div style={{ height: '200px', background: '#f4f4f5', borderRadius: '12px', animation: 'pulse 2s infinite' }}></div>,
+    ssr: false // Optional, but usually good for heavy interactive components
+});
+import api from '@/utils/api';
 import { Search, MapPin } from 'lucide-react';
 
 export default function JobsPage() {
+    const [jobs, setJobs] = React.useState<any[]>([]);
+    const [loading, setLoading] = React.useState(true);
+
+    React.useEffect(() => {
+        const fetchJobs = async () => {
+            try {
+                const { data } = await api.get('/jobs');
+                setJobs(data);
+            } catch (error) {
+                console.error('Error fetching jobs:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchJobs();
+    }, []);
+
     return (
         <div style={{ background: '#fafafa', minHeight: '100vh', paddingBottom: '8rem' }}>
 
@@ -58,7 +82,7 @@ export default function JobsPage() {
                     <main>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                             <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#18181b' }}>
-                                Showing <span style={{ color: '#2563eb' }}>{MOCK_JOBS.length}</span> active jobs
+                                Showing <span style={{ color: '#2563eb' }}>{jobs.length}</span> active jobs
                             </div>
                             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                                 <span style={{ fontSize: '0.9rem', color: '#71717a' }}>Sort by:</span>
@@ -73,11 +97,18 @@ export default function JobsPage() {
                             </div>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                            {MOCK_JOBS.map((job) => (
-                                <JobCard key={job.id} {...job} />
-                            ))}
-                        </div>
+                        {loading ? (
+                            <div style={{ textAlign: 'center', padding: '4rem', color: '#a1a1aa' }}>Loading jobs...</div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                {jobs.map((job) => (
+                                    <JobCard key={job._id} id={job._id} {...job} />
+                                ))}
+                                {jobs.length === 0 && (
+                                    <div style={{ textAlign: 'center', padding: '4rem', color: '#a1a1aa' }}>No jobs found</div>
+                                )}
+                            </div>
+                        )}
                     </main>
                 </div>
             </div>

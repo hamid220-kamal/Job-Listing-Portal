@@ -6,6 +6,7 @@ import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import api from '@/utils/api';
 
 export default function SignupPage() {
     const router = useRouter();
@@ -19,22 +20,12 @@ export default function SignupPage() {
         setLoading(true);
 
         try {
-            const res = await fetch('/api/auth/signup', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.message || 'Something went wrong');
-            }
+            await api.post('/auth/signup', formData);
 
             // Redirect to login on success
             router.push('/auth/login?registered=true');
         } catch (err: any) {
-            setError(err.message);
+            setError(err.response?.data?.message || err.message || 'Something went wrong');
         } finally {
             setLoading(false);
         }

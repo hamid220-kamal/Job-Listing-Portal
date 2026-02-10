@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, Suspense } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Link from 'next/link';
-import { signIn } from 'next-auth/react';
+// import { signIn } from 'next-auth/react'; // Removed for Pure MERN
+import api from '@/utils/api';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 function LoginForm() {
@@ -16,22 +18,32 @@ function LoginForm() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
+    const { login } = useAuth();
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setLoading(true);
 
-        const res = await signIn('credentials', {
-            redirect: false,
-            email: formData.email,
-            password: formData.password,
-        });
+        try {
+            const { data } = await api.post('/auth/login', {
+                email: formData.email,
+                password: formData.password,
+            });
 
-        if (res?.error) {
-            setError('Invalid email or password');
+            // Use context login
+            login(data);
+
+            // Redirect based on role
+            if (data.role === 'employer') {
+                router.push('/dashboard/employer');
+            } else {
+                router.push('/dashboard/candidate');
+            }
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Invalid email or password');
+        } finally {
             setLoading(false);
-        } else {
-            router.push('/dashboard/candidate'); // Default redirect
         }
     };
 

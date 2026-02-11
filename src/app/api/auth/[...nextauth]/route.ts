@@ -49,7 +49,7 @@ export const authOptions: NextAuthOptions = {
     pages: {
         signIn: '/auth/login',
     },
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: 'dummy-secret-key-12345',
 };
 
 const handler = NextAuth(authOptions);

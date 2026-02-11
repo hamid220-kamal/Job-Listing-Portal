@@ -1,13 +1,10 @@
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const asyncHandler = require('express-async-handler'); // We need to install this or use try-catch
-const User = require('../models/User');
+// Dummy Auth Controller with Hardcoded Data
 
-// Generate JWT
+// Generate JWT (Modified to not need env secret if preferred, or keep simplistic)
 const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: '30d',
-    });
+    // Determine if we want to keep using jsonwebtoken or just return a dummy string
+    // For simplicity and to remove .env dependency completely, let's use a dummy token
+    return `dummy-token-for-user-${id}`;
 };
 
 // @desc    Register new user
@@ -21,37 +18,21 @@ const registerUser = async (req, res) => {
         return;
     }
 
-    // Check if user exists
-    const userExists = await User.findOne({ email });
-
-    if (userExists) {
-        res.status(400).json({ message: 'User already exists' });
-        return;
-    }
-
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Create user
-    const user = await User.create({
+    // Simulate success
+    const user = {
+        _id: 'dummy-id-' + Date.now(),
         name,
         email,
-        password: hashedPassword,
-        role: role || 'candidate'
-    });
+        role: role || 'candidate',
+    };
 
-    if (user) {
-        res.status(201).json({
-            _id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            token: generateToken(user._id),
-        });
-    } else {
-        res.status(400).json({ message: 'Invalid user data' });
-    }
+    res.status(201).json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token: generateToken(user._id),
+    });
 };
 
 // @desc    Authenticate a user
@@ -60,26 +41,29 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
-    // Check for user email via mongoose
-    const user = await User.findOne({ email }).select('+password');
+    // Simulate login for any user or specific dummy user
+    // Let's allow any login for now as requested
+    const user = {
+        _id: 'dummy-login-id-123',
+        name: 'Dummy User',
+        email: email,
+        role: 'candidate', // Default role
+    };
 
-    if (user && (await bcrypt.compare(password, user.password))) {
-        res.json({
-            _id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            token: generateToken(user._id),
-        });
-    } else {
-        res.status(400).json({ message: 'Invalid credentials' });
-    }
+    res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        token: generateToken(user._id),
+    });
 };
 
 // @desc    Get user data
 // @route   GET /api/auth/me
 // @access  Private
 const getMe = async (req, res) => {
+    // req.user is set by middleware
     res.status(200).json(req.user);
 };
 

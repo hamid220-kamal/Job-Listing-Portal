@@ -28,10 +28,11 @@ app.use('/api', limiter);
 // Stricter rate limiting for auth endpoints
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // limit each IP to 5 login requests per windowMs
-    message: 'Too many login attempts, please try again later.'
+    max: 20, // Increased for development testing (was 5)
+    message: 'Too many authentication attempts, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
 });
-app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/signup', authLimiter);
 
 // CORS Configuration - whitelist specific origins

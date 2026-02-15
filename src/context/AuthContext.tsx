@@ -1,55 +1,112 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import api from '@/utils/api';
+import axios from 'axios';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 interface User {
     _id: string;
     name: string;
     email: string;
     role: string;
-    token: string;
 }
 
 interface AuthContextType {
     user: User | null;
+    token: string | null;
     loading: boolean;
-    login: (userData: User) => void;
+    error: string | null;
+    login: (email: string, password: string) => Promise<void>;
+    signup: (name: string, email: string, password: string, role: string) => Promise<void>;
     logout: () => void;
+    clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
+    const [token, setToken] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // Check for stored user
+        // Check for stored user and token on mount
         const storedUser = localStorage.getItem('user');
-        const token = localStorage.getItem('token');
+        const storedToken = localStorage.getItem('token');
 
-        if (storedUser && token) {
+        if (storedUser && storedToken) {
             setUser(JSON.parse(storedUser));
+            setToken(storedToken);
         }
         setLoading(false);
     }, []);
 
-    const login = (userData: User) => {
-        localStorage.setItem('user', JSON.stringify(userData));
-        localStorage.setItem('token', userData.token);
-        setUser(userData);
+    const login = async (email: string, password: string) => {
+        try {
+            setError(null);
+            setLoading(true);
+            const response = await axios.post(`${API_URL}/auth/login`, {
+                email,
+                password,
+            });
+
+            const { token: authToken, ...userData } = response.data;
+
+            localStorage.setItem('user', JSON.stringify(userData));
+            localStorage.setItem('token', authToken);
+            setUser(userData);
+            setToken(authToken);
+        } catch (err: any) {
+            const message = err.response?.data?.message || 'Login failed';
+            setError(message);
+            throw new Error(message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const signup = async (name: string, email: string, password: string, role: string) => {
+        try {
+            setError(null);
+            setLoading(true);
+            const response = await axios.post(`${API_URL}/auth/signup`, {
+                name,
+                email,
+                password,
+                role,
+            });
+
+            const { token: authToken, ...userData } = response.data;
+
+            localStorage.setItem('user', JSON.stringify(userData));
+            localStorage.setItem('token', authToken);
+            setUser(userData);
+            setToken(authToken);
+        } catch (err: any) {
+            const message = err.response?.data?.message || 'Signup failed';
+            setError(message);
+            throw new Error(message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const logout = () => {
         localStorage.removeItem('user');
         localStorage.removeItem('token');
         setUser(null);
+        setToken(null);
         window.location.href = '/';
     };
 
+    const clearError = () => {
+        setError(null);
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout }}>
+        <AuthContext.Provider value={{ user, token, loading, error, login, signup, logout, clearError }}>
             {children}
         </AuthContext.Provider>
     );

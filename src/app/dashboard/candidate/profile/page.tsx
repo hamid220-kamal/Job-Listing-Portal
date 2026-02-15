@@ -1,72 +1,255 @@
 "use client";
 
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import api from '@/utils/api';
 import Button from '@/components/Button';
-import Input from '@/components/Input';
-import FileUpload from '@/components/FileUpload';
-import MotionWrapper, { slideUp } from '@/components/MotionWrapper';
 
 export default function CandidateProfile() {
+    const { user, loading: authLoading } = useAuth();
+    const router = useRouter();
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState({ type: '', text: '' });
+
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        bio: '',
+        skills: '',
+        experience: '',
+        education: '',
+    });
+
+    useEffect(() => {
+        if (!authLoading && !user) {
+            router.push('/auth/login');
+        } else if (user && user.role !== 'candidate') {
+            router.push('/dashboard/employer');
+        }
+    }, [user, authLoading, router]);
+
+    useEffect(() => {
+        if (user) {
+            fetchProfile();
+        }
+    }, [user]);
+
+    const fetchProfile = async () => {
+        try {
+            const response = await api.get('/profile');
+            const data = response.data;
+            setFormData({
+                name: data.name || '',
+                email: data.email || '',
+                bio: data.bio || '',
+                skills: Array.isArray(data.skills) ? data.skills.join(', ') : '',
+                experience: data.experience || '',
+                education: data.education || '',
+            });
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value,
+        });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setMessage({ type: '', text: '' });
+
+        try {
+            const submitData = {
+                ...formData,
+                skills: formData.skills.split(',').map(s => s.trim()).filter(s => s),
+            };
+
+            await api.put('/profile', submitData);
+            setMessage({ type: 'success', text: 'Profile updated successfully!' });
+        } catch (error: any) {
+            setMessage({
+                type: 'error',
+                text: error.response?.data?.message || 'Failed to update profile'
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (authLoading || !user) {
+        return <div style={{ padding: '4rem', textAlign: 'center' }}>Loading...</div>;
+    }
+
     return (
-        <div className="container" style={{ padding: '4rem 1.5rem', maxWidth: '800px' }}>
-            <MotionWrapper>
-                <div style={{ marginBottom: '3rem' }}>
-                    <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem' }}>My Profile</h1>
-                    <p style={{ color: 'var(--muted-foreground)' }}>Manage your personal information and resume.</p>
-                </div>
+        <div className="container" style={{ padding: '4rem 1.5rem', maxWidth: '800px', margin: '0 auto' }}>
+            <header style={{ marginBottom: '2rem' }}>
+                <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                    Candidate Profile
+                </h1>
+                <p style={{ color: 'var(--muted-foreground)' }}>
+                    Complete your profile to get better job recommendations
+                </p>
+            </header>
 
+            {message.text && (
                 <div style={{
-                    backgroundColor: 'var(--surface)',
-                    border: '1px solid var(--border)',
+                    padding: '1rem',
+                    marginBottom: '1.5rem',
                     borderRadius: 'var(--radius)',
-                    padding: '2rem',
-                    boxShadow: 'var(--shadow-sm)'
+                    backgroundColor: message.type === 'success' ? '#DEF7EC' : '#FDE8E8',
+                    color: message.type === 'success' ? '#03543F' : '#9B1C1C',
                 }}>
-                    <form style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                        {/* Personal Info */}
-                        <section style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                            <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Personal Details</h2>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                                <Input label="First Name" defaultValue="Hamid" />
-                                <Input label="Last Name" defaultValue="Kamal" />
-                            </div>
-                            <Input label="Email Address" type="email" defaultValue="hamid@example.com" />
-                            <Input label="Job Title" placeholder="e.g. Senior Frontend Developer" />
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>Bio</label>
-                                <textarea
-                                    rows={4}
-                                    placeholder="Tell us about yourself..."
-                                    style={{
-                                        borderRadius: 'var(--radius)',
-                                        border: '1px solid var(--border)',
-                                        padding: '0.75rem',
-                                        fontFamily: 'inherit',
-                                        fontSize: '0.875rem',
-                                        resize: 'vertical',
-                                        backgroundColor: 'transparent'
-                                    }}
-                                />
-                            </div>
-                        </section>
-
-                        <hr style={{ border: 'none', borderTop: '1px solid var(--border)' }} />
-
-                        {/* Resume */}
-                        <section style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                            <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Resume / CV</h2>
-                            <FileUpload label="Upload Resume" />
-                        </section>
-
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-                            <Button size="lg" style={{ background: 'var(--gradient-primary)', border: 'none', boxShadow: 'var(--shadow-glow)' }}>
-                                Save Changes
-                            </Button>
-                        </div>
-                    </form>
+                    {message.text}
                 </div>
-            </MotionWrapper>
+            )}
+
+            <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1.5rem' }}>
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                        Full Name
+                    </label>
+                    <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius)',
+                            fontSize: '1rem',
+                        }}
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                        Email
+                    </label>
+                    <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        readOnly
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius)',
+                            fontSize: '1rem',
+                            backgroundColor: '#f5f5f5',
+                            cursor: 'not-allowed',
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                        Bio / Summary
+                    </label>
+                    <textarea
+                        name="bio"
+                        value={formData.bio}
+                        onChange={handleChange}
+                        rows={4}
+                        placeholder="Tell us about yourself..."
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius)',
+                            fontSize: '1rem',
+                            fontFamily: 'inherit',
+                            resize: 'vertical',
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                        Skills
+                    </label>
+                    <input
+                        type="text"
+                        name="skills"
+                        value={formData.skills}
+                        onChange={handleChange}
+                        placeholder="JavaScript, React, Node.js (comma-separated)"
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius)',
+                            fontSize: '1rem',
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                        Experience
+                    </label>
+                    <textarea
+                        name="experience"
+                        value={formData.experience}
+                        onChange={handleChange}
+                        rows={4}
+                        placeholder="Describe your work experience..."
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius)',
+                            fontSize: '1rem',
+                            fontFamily: 'inherit',
+                            resize: 'vertical',
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                        Education
+                    </label>
+                    <textarea
+                        name="education"
+                        value={formData.education}
+                        onChange={handleChange}
+                        rows={3}
+                        placeholder="Your educational background..."
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius)',
+                            fontSize: '1rem',
+                            fontFamily: 'inherit',
+                            resize: 'vertical',
+                        }}
+                    />
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem', paddingTop: '1rem' }}>
+                    <Button type="submit" disabled={loading}>
+                        {loading ? 'Saving...' : 'Save Profile'}
+                    </Button>
+                    <Button
+                        type="button"
+                        onClick={() => router.push('/dashboard/candidate')}
+                        style={{ backgroundColor: '#6B7280' }}
+                    >
+                        Back to Dashboard
+                    </Button>
+                </div>
+            </form>
         </div>
     );
 }

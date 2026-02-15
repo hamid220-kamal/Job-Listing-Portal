@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -25,9 +26,51 @@ const userSchema = new mongoose.Schema({
         enum: ['candidate', 'employer'],
         default: 'candidate'
     },
+    // Candidate-specific fields
+    bio: {
+        type: String,
+        default: ''
+    },
+    skills: {
+        type: [String],
+        default: []
+    },
+    experience: {
+        type: String,
+        default: ''
+    },
+    education: {
+        type: String,
+        default: ''
+    },
+    resume: {
+        type: String,
+        default: ''
+    },
+    // Employer-specific fields
     company: {
         type: String,
-        // only if employer
+        default: ''
+    },
+    companyDescription: {
+        type: String,
+        default: ''
+    },
+    industry: {
+        type: String,
+        default: ''
+    },
+    companySize: {
+        type: String,
+        default: ''
+    },
+    website: {
+        type: String,
+        default: ''
+    },
+    logo: {
+        type: String,
+        default: ''
     },
     createdAt: {
         type: Date,
@@ -35,7 +78,18 @@ const userSchema = new mongoose.Schema({
     }
 });
 
-// Match user entered password to hashed password in database
-// We will add bcrypt later in controller or pre-save hook
+// Hash password before saving
+userSchema.pre('save', async function (next) {
+    if (!this.isModified('password')) {
+        next();
+    }
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+});
+
+// Method to compare passwords
+userSchema.methods.matchPassword = async function (enteredPassword) {
+    return await bcrypt.compare(enteredPassword, this.password);
+};
 
 module.exports = mongoose.model('User', userSchema);

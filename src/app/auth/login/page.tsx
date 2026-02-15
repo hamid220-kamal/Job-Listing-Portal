@@ -26,22 +26,22 @@ function LoginForm() {
         setLoading(true);
 
         try {
-            const { data } = await api.post('/auth/login', {
-                email: formData.email,
-                password: formData.password,
-            });
+            // Use the AuthContext login method which handles everything
+            await login(formData.email, formData.password);
 
-            // Use context login
-            login(data);
-
-            // Redirect based on role
-            if (data.role === 'employer') {
-                router.push('/dashboard/employer');
-            } else {
-                router.push('/dashboard/candidate');
+            // Navigation will happen automatically after login sets the user
+            // Get user from localStorage to redirect properly
+            const userData = localStorage.getItem('user');
+            if (userData) {
+                const user = JSON.parse(userData);
+                if (user.role === 'employer') {
+                    router.push('/dashboard/employer');
+                } else {
+                    router.push('/dashboard/candidate');
+                }
             }
         } catch (err: any) {
-            setError(err.response?.data?.message || 'Invalid email or password');
+            setError(err.message || 'Invalid email or password');
         } finally {
             setLoading(false);
         }

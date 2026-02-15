@@ -1,71 +1,282 @@
 "use client";
 
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import api from '@/utils/api';
 import Button from '@/components/Button';
-import Input from '@/components/Input';
-import FileUpload from '@/components/FileUpload';
-import MotionWrapper from '@/components/MotionWrapper';
 
 export default function EmployerProfile() {
+    const { user, loading: authLoading } = useAuth();
+    const router = useRouter();
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState({ type: '', text: '' });
+
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        company: '',
+        companyDescription: '',
+        industry: '',
+        companySize: '',
+        website: '',
+    });
+
+    useEffect(() => {
+        if (!authLoading && !user) {
+            router.push('/auth/login');
+        } else if (user && user.role !== 'employer') {
+            router.push('/dashboard/candidate');
+        }
+    }, [user, authLoading, router]);
+
+    useEffect(() => {
+        if (user) {
+            fetchProfile();
+        }
+    }, [user]);
+
+    const fetchProfile = async () => {
+        try {
+            const response = await api.get('/profile');
+            const data = response.data;
+            setFormData({
+                name: data.name || '',
+                email: data.email || '',
+                company: data.company || '',
+                companyDescription: data.companyDescription || '',
+                industry: data.industry || '',
+                companySize: data.companySize || '',
+                website: data.website || '',
+            });
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value,
+        });
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setMessage({ type: '', text: '' });
+
+        try {
+            await api.put('/profile', formData);
+            setMessage({ type: 'success', text: 'Profile updated successfully!' });
+        } catch (error: any) {
+            setMessage({
+                type: 'error',
+                text: error.response?.data?.message || 'Failed to update profile'
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (authLoading || !user) {
+        return <div style={{ padding: '4rem', textAlign: 'center' }}>Loading...</div>;
+    }
+
     return (
-        <div className="container" style={{ padding: '4rem 1.5rem', maxWidth: '800px' }}>
-            <MotionWrapper>
-                <div style={{ marginBottom: '3rem' }}>
-                    <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem' }}>Company Profile</h1>
-                    <p style={{ color: 'var(--muted-foreground)' }}>Update your company details and branding.</p>
-                </div>
+        <div className="container" style={{ padding: '4rem 1.5rem', maxWidth: '800px', margin: '0 auto' }}>
+            <header style={{ marginBottom: '2rem' }}>
+                <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                    Employer Profile
+                </h1>
+                <p style={{ color: 'var(--muted-foreground)' }}>
+                    Update your company information to attract top talent
+                </p>
+            </header>
 
+            {message.text && (
                 <div style={{
-                    backgroundColor: 'var(--surface)',
-                    border: '1px solid var(--border)',
+                    padding: '1rem',
+                    marginBottom: '1.5rem',
                     borderRadius: 'var(--radius)',
-                    padding: '2rem',
-                    boxShadow: 'var(--shadow-sm)'
+                    backgroundColor: message.type === 'success' ? '#DEF7EC' : '#FDE8E8',
+                    color: message.type === 'success' ? '#03543F' : '#9B1C1C',
                 }}>
-                    <form style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                        {/* Company Info */}
-                        <section style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                            <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Company Details</h2>
-                            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
-                                <Input label="Company Name" defaultValue="Acme Inc." />
-                                <Input label="Industry" placeholder="e.g. Technology" />
-                            </div>
-                            <Input label="Website URL" placeholder="https://example.com" />
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                <label style={{ fontSize: '0.875rem', fontWeight: 500 }}>Company Description</label>
-                                <textarea
-                                    rows={4}
-                                    placeholder="Describe your company culture and mission..."
-                                    style={{
-                                        borderRadius: 'var(--radius)',
-                                        border: '1px solid var(--border)',
-                                        padding: '0.75rem',
-                                        fontFamily: 'inherit',
-                                        fontSize: '0.875rem',
-                                        resize: 'vertical',
-                                        backgroundColor: 'transparent'
-                                    }}
-                                />
-                            </div>
-                        </section>
-
-                        <hr style={{ border: 'none', borderTop: '1px solid var(--border)' }} />
-
-                        {/* Branding */}
-                        <section style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                            <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>Branding</h2>
-                            <FileUpload label="Company Logo" accept=".png,.jpg,.jpeg,.svg" />
-                        </section>
-
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-                            <Button size="lg" style={{ background: 'var(--gradient-primary)', border: 'none', boxShadow: 'var(--shadow-glow)' }}>
-                                Save Profile
-                            </Button>
-                        </div>
-                    </form>
+                    {message.text}
                 </div>
-            </MotionWrapper>
+            )}
+
+            <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1.5rem' }}>
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                        Your Name
+                    </label>
+                    <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius)',
+                            fontSize: '1rem',
+                        }}
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                        Email
+                    </label>
+                    <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        readOnly
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius)',
+                            fontSize: '1rem',
+                            backgroundColor: '#f5f5f5',
+                            cursor: 'not-allowed',
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                        Company Name
+                    </label>
+                    <input
+                        type="text"
+                        name="company"
+                        value={formData.company}
+                        onChange={handleChange}
+                        placeholder="Your company name"
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius)',
+                            fontSize: '1rem',
+                        }}
+                        required
+                    />
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                        Company Description
+                    </label>
+                    <textarea
+                        name="companyDescription"
+                        value={formData.companyDescription}
+                        onChange={handleChange}
+                        rows={4}
+                        placeholder="Tell candidates about your company..."
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius)',
+                            fontSize: '1rem',
+                            fontFamily: 'inherit',
+                            resize: 'vertical',
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                        Industry
+                    </label>
+                    <select
+                        name="industry"
+                        value={formData.industry}
+                        onChange={handleChange}
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius)',
+                            fontSize: '1rem',
+                        }}
+                    >
+                        <option value="">Select Industry</option>
+                        <option value="Technology">Technology</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Education">Education</option>
+                        <option value="Retail">Retail</option>
+                        <option value="Manufacturing">Manufacturing</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                        Company Size
+                    </label>
+                    <select
+                        name="companySize"
+                        value={formData.companySize}
+                        onChange={handleChange}
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius)',
+                            fontSize: '1rem',
+                        }}
+                    >
+                        <option value="">Select Size</option>
+                        <option value="1-10">1-10 employees</option>
+                        <option value="11-50">11-50 employees</option>
+                        <option value="51-200">51-200 employees</option>
+                        <option value="201-500">201-500 employees</option>
+                        <option value="501-1000">501-1000 employees</option>
+                        <option value="1000+">1000+ employees</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                        Website URL
+                    </label>
+                    <input
+                        type="url"
+                        name="website"
+                        value={formData.website}
+                        onChange={handleChange}
+                        placeholder="https://yourcompany.com"
+                        style={{
+                            width: '100%',
+                            padding: '0.75rem',
+                            border: '1px solid var(--border)',
+                            borderRadius: 'var(--radius)',
+                            fontSize: '1rem',
+                        }}
+                    />
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem', paddingTop: '1rem' }}>
+                    <Button type="submit" disabled={loading}>
+                        {loading ? 'Saving...' : 'Save Profile'}
+                    </Button>
+                    <Button
+                        type="button"
+                        onClick={() => router.push('/dashboard/employer')}
+                        style={{ backgroundColor: '#6B7280' }}
+                    >
+                        Back to Dashboard
+                    </Button>
+                </div>
+            </form>
         </div>
     );
 }

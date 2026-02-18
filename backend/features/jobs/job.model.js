@@ -32,6 +32,16 @@ const jobSchema = new mongoose.Schema({
         type: [String],
         default: []
     },
+    qualifications: {
+        type: [String],
+        default: [],
+        required: [true, 'Please add qualifications']
+    },
+    responsibilities: {
+        type: [String],
+        default: [],
+        required: [true, 'Please add responsibilities']
+    },
     postedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

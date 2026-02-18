@@ -1,4 +1,4 @@
-// Dummy Job Controller with In-Memory Data
+const Job = require('./job.model');
 
 // In-memory array to store jobs
 let jobs = [

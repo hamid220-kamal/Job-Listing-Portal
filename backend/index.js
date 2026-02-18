@@ -61,10 +61,12 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 app.use(cookieParser()); // Cookie parser for HTTP-only cookies
 
 // Routes
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/jobs', require('./routes/jobRoutes'));
-app.use('/api/applications', require('./routes/applicationRoutes'));
-app.use('/api/profile', require('./routes/profileRoutes'));
+app.use('/api/auth', require('./features/auth/auth.routes'));
+app.use('/api/jobs', require('./features/jobs/job.routes'));
+app.use('/api/applications', require('./features/applications/application.routes'));
+app.use('/api/profile', require('./features/profile/profile.routes'));
+app.use('/api/dashboard', require('./features/dashboard/dashboard.routes'));
+app.use('/api/search', require('./features/search/search.routes'));
 
 // Routes Placeholder
 app.get('/', (req, res) => {

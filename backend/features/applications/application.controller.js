@@ -1,3 +1,6 @@
+const Application = require('./application.model');
+const Job = require('../jobs/job.model');
+
 // Dummy Application Controller with In-Memory Data
 
 // In-memory array to store applications

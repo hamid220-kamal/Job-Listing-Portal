@@ -4,8 +4,8 @@ const {
     applyJob,
     getMyApplications,
     getJobApplications
-} = require('../controllers/applicationController');
-const { protect } = require('../middleware/authMiddleware');
+} = require('./application.controller');
+const { protect } = require('../../middleware/authMiddleware');
 
 router.post('/:jobId', protect, applyJob);
 router.get('/me', protect, getMyApplications);

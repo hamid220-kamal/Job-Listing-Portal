@@ -176,8 +176,35 @@ const getMe = asyncHandler(async (req, res) => {
     res.status(200).json(req.user);
 });
 
+// @desc    Validate a token (For Remote Verification)
+// @route   POST /api/auth/validate-token
+// @access  Public (Protected by signature verification)
+const validateToken = asyncHandler(async (req, res) => {
+    const { token } = req.body;
+
+    if (!token) {
+        res.status(400);
+        throw new Error('Token is required');
+    }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id).select('-password');
+
+        if (!user) {
+            res.status(404);
+            throw new Error('User not found');
+        }
+
+        res.status(200).json({ valid: true, user });
+    } catch (error) {
+        res.status(401).json({ valid: false, message: 'Invalid token' });
+    }
+});
+
 module.exports = {
     registerUser,
     loginUser,
     getMe,
+    validateToken,
 };

@@ -44,15 +44,27 @@ const connectDB = async () => {
 
     // Main Logic
     if (forceCloud) {
+        if (!cloudURI) {
+            console.error('❌ Cannot force Cloud: MONGO_URI is not defined in .env');
+            process.exit(1);
+        }
         await connectToCloud(true);
     } else if (forceLocal) {
         await connectToLocal(true);
     } else {
-        // Default Behavior: Try Cloud -> Fallback to Local
-        try {
-            await connectToCloud();
-        } catch (error) {
-            console.log('⚠️  Checking network or IP Whitelist issues...');
+        // Default Behavior: 
+        // 1. If MONGO_URI exists, Try Cloud -> Fallback to Local
+        // 2. If NO MONGO_URI (Colleague's machine), Default to Local immediately
+        if (cloudURI) {
+            try {
+                await connectToCloud();
+            } catch (error) {
+                console.log('⚠️  Checking network or IP Whitelist issues...');
+                await connectToLocal();
+            }
+        } else {
+            console.log('ℹ️  No MONGO_URI found in .env');
+            console.log('ℹ️  Running in "Isolated Development Mode"');
             await connectToLocal();
         }
     }

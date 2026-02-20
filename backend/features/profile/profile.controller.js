@@ -28,6 +28,8 @@ const updateProfile = asyncHandler(async (req, res) => {
 
     // Update basic fields
     user.name = req.body.name || user.name;
+    user.phone = req.body.phone !== undefined ? req.body.phone : user.phone;
+    user.address = req.body.address !== undefined ? req.body.address : user.address;
 
     // Update role-specific fields
     if (user.role === 'candidate') {
@@ -52,6 +54,8 @@ const updateProfile = asyncHandler(async (req, res) => {
         name: updatedUser.name,
         email: updatedUser.email,
         role: updatedUser.role,
+        phone: updatedUser.phone,
+        address: updatedUser.address,
         bio: updatedUser.bio,
         skills: updatedUser.skills,
         experience: updatedUser.experience,

@@ -1,15 +1,16 @@
 "use client";
 
 import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import api from '@/utils/api';
 
 export default function SignupPage() {
     const router = useRouter();
+    const { signup } = useAuth();
     const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'candidate' });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -20,10 +21,15 @@ export default function SignupPage() {
         setLoading(true);
 
         try {
-            await api.post('/auth/signup', formData);
+            // Use AuthContext signup — stores token + user and keeps them logged in
+            await signup(formData.name, formData.email, formData.password, formData.role);
 
-            // Redirect to login on success
-            router.push('/auth/login?registered=true');
+            // Redirect to the correct dashboard based on their chosen role
+            if (formData.role === 'employer') {
+                router.push('/dashboard/employer');
+            } else {
+                router.push('/dashboard/candidate');
+            }
         } catch (err: any) {
             setError(err.response?.data?.message || err.message || 'Something went wrong');
         } finally {

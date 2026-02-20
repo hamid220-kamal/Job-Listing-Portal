@@ -30,15 +30,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // Check for stored user and token on mount
-        const storedUser = localStorage.getItem('user');
-        const storedToken = localStorage.getItem('token');
+        const validateStoredAuth = async () => {
+            const storedUser = localStorage.getItem('user');
+            const storedToken = localStorage.getItem('token');
 
-        if (storedUser && storedToken) {
-            setUser(JSON.parse(storedUser));
-            setToken(storedToken);
-        }
-        setLoading(false);
+            if (storedUser && storedToken) {
+                try {
+                    // Validate the stored token is still valid
+                    const response = await api.get('/auth/me');
+                    // Use fresh data from server, not stale localStorage
+                    setUser(response.data);
+                    setToken(storedToken);
+                    // Update localStorage with fresh server data
+                    localStorage.setItem('user', JSON.stringify(response.data));
+                } catch {
+                    // Token expired or invalid — clear stale auth
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('token');
+                    setUser(null);
+                    setToken(null);
+                }
+            }
+            setLoading(false);
+        };
+
+        validateStoredAuth();
     }, []);
 
     const login = async (email: string, password: string) => {

@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 
@@ -34,6 +35,17 @@ const authLimiter = rateLimit({
     legacyHeaders: false,
 });
 app.use('/api/auth/signup', authLimiter);
+app.use('/api/auth/login', authLimiter);
+
+// Rate limit token validation to prevent enumeration
+const tokenLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 30,
+    message: 'Too many token validation requests.',
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+app.use('/api/auth/validate-token', tokenLimiter);
 
 // CORS Configuration - whitelist specific origins
 const corsOptions = {
@@ -61,6 +73,7 @@ app.use(cors(corsOptions));
 // Body Parser Middleware
 app.use(express.json({ limit: '10mb' })); // Limit payload size
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+app.use(mongoSanitize()); // Prevent NoSQL injection attacks (strips $ and . from req.body/query/params)
 app.use(cookieParser()); // Cookie parser for HTTP-only cookies
 
 // Routes
@@ -76,7 +89,12 @@ app.get('/', (req, res) => {
     res.send('API is running...');
 });
 
-// Error Handler Middleware (must be after routes)
+// 404 Handler — must come before the error handler
+app.use((req, res, next) => {
+    res.status(404).json({ message: 'Route not found' });
+});
+
+// Error Handler Middleware (must be last — Express identifies it by 4 params)
 app.use((err, req, res, next) => {
     const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
     res.status(statusCode);
@@ -86,11 +104,6 @@ app.use((err, req, res, next) => {
         // Only send stack trace in development
         stack: process.env.NODE_ENV === 'production' ? null : err.stack,
     });
-});
-
-// 404 Handler
-app.use((req, res) => {
-    res.status(404).json({ message: 'Route not found' });
 });
 
 const PORT = process.env.PORT || 5000;

@@ -7,63 +7,59 @@ const axios = require('axios');
 const AUTH_SERVER_URL = 'https://job-listing-portal-psi-nine.vercel.app/api/auth/validate-token';
 
 const protect = asyncHandler(async (req, res, next) => {
-    let token;
+    const authHeader = req.headers.authorization;
 
-    if (
-        req.headers.authorization &&
-        req.headers.authorization.startsWith('Bearer')
-    ) {
-        try {
-            // Get token from header
-            token = req.headers.authorization.split(' ')[1];
-
-            // MODE 1: ADMIN (Has Secret Key)
-            if (process.env.JWT_SECRET) {
-                // Verify token locally
-                const decoded = jwt.verify(token, process.env.JWT_SECRET);
-                req.user = await User.findById(decoded.id).select('-password');
-
-                if (!req.user) {
-                    res.status(401);
-                    throw new Error('User not found');
-                }
-            }
-            // MODE 2: COLLABORATOR (No Secret Key)
-            else {
-                console.log('⚡ Using Remote Auth Verification...');
-                try {
-                    const response = await axios.post(AUTH_SERVER_URL, { token });
-
-                    if (response.data.valid) {
-                        // We construct a minimal user object from what the Auth Server returned
-                        // Note: This user might NOT exist in the local DB yet if they haven't synced/seeded
-                        req.user = response.data.user;
-
-                        // Optional: Check if user exists locally, if not, maybe create a stub?
-                        // For now, let's assume specific features might fail if user isn't in local DB,
-                        // but Auth passes.
-                    } else {
-                        throw new Error('Invalid Token');
-                    }
-                } catch (remoteError) {
-                    console.error('Remote Auth Failed:', remoteError.message);
-                    res.status(401);
-                    throw new Error('Not authorized (Remote Verification Failed)');
-                }
-            }
-
-            next();
-        } catch (error) {
-            console.error(error);
-            res.status(401);
-            throw new Error('Not authorized');
-        }
-    }
-
-    if (!token) {
+    if (!authHeader || !authHeader.startsWith('Bearer')) {
         res.status(401);
         throw new Error('Not authorized, no token');
     }
+
+    const token = authHeader.split(' ')[1];
+
+    try {
+        // MODE 1: ADMIN (Has Secret Key)
+        if (process.env.JWT_SECRET) {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const user = await User.findById(decoded.id).select('-password');
+
+            if (!user) {
+                res.status(401);
+                throw new Error('User not found');
+            }
+
+            req.user = user;
+            return next();
+        }
+
+        // MODE 2: COLLABORATOR (No Secret Key)
+        console.log('⚡ Using Remote Auth Verification...');
+        const response = await axios.post(AUTH_SERVER_URL, { token });
+
+        if (!response.data.valid) {
+            res.status(401);
+            throw new Error('Invalid Token');
+        }
+
+        req.user = response.data.user;
+        return next();
+    } catch (error) {
+        // If res.statusCode wasn't already set to an error code
+        if (res.statusCode === 200) {
+            res.status(401);
+        }
+        throw new Error(error.message || 'Not authorized');
+    }
 });
 
-module.exports = { protect };
+// Role-based access control middleware — use after `protect`
+const authorize = (...roles) => {
+    return (req, res, next) => {
+        if (!req.user || !roles.includes(req.user.role)) {
+            res.status(403);
+            throw new Error(`Role '${req.user?.role}' is not authorized to access this route`);
+        }
+        next();
+    };
+};
+
+module.exports = { protect, authorize };

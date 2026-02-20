@@ -21,4 +21,21 @@ api.interceptors.request.use(
     (error: AxiosError) => Promise.reject(error)
 );
 
+// Add a response interceptor to handle expired/invalid tokens
+api.interceptors.response.use(
+    (response) => response,
+    (error: AxiosError) => {
+        if (error.response?.status === 401 && typeof window !== 'undefined') {
+            // Token is expired or invalid — clear auth state and redirect to login
+            const token = localStorage.getItem('token');
+            if (token) {
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
+                window.location.href = '/auth/login';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
 export default api;

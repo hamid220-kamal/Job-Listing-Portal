@@ -71,13 +71,12 @@ const getMyApplications = async (req, res) => {
 
 // @desc    Get applications for a job (Employer only)
 // @route   GET /api/applications/job/:jobId
-// @access  Private
+// @access  Private (Employer only)
 const getJobApplications = async (req, res) => {
-    // In a real app we'd check if user is job owner. 
-    // Here we'll just return applications for the job if the user is an employer (or just allow it)
-
-    // Simple check if user is employer (if we had role in req.user)
-    // if (req.user.role !== 'employer') ...
+    // Role check — only employers can view job applications
+    if (!req.user || req.user.role !== 'employer') {
+        return res.status(403).json({ message: 'Only employers can view job applications' });
+    }
 
     const jobApps = applications.filter(app => app.job._id === req.params.jobId);
     res.status(200).json(jobApps);

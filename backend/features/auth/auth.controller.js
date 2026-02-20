@@ -1,7 +1,10 @@
 const jwt = require('jsonwebtoken');
+const axios = require('axios');
 const User = require('./user.model');
 const asyncHandler = require('express-async-handler');
-const { body, validationResult } = require('express-validator');
+
+// Deployed Backend URL for Remote Auth Proxy
+const AUTH_SERVER_URL = 'https://job-listing-portal-psi-nine.vercel.app/api/auth';
 
 // Password strength validation
 const validatePassword = (password) => {
@@ -29,13 +32,7 @@ const validatePassword = (password) => {
     return null;
 };
 
-// Input sanitization - prevent NoSQL injection
-const sanitizeInput = (input) => {
-    if (typeof input === 'string') {
-        return input.trim().replace(/[<>]/g, '');
-    }
-    return input;
-};
+
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -50,14 +47,6 @@ const generateRefreshToken = (id) => {
         expiresIn: '30d',
     });
 };
-
-// @desc    Register new user
-// @route   POST /api/auth/signup
-// @access  Public
-const axios = require('axios');
-
-// Deployed Backend URL for Remote Auth Proxy
-const AUTH_SERVER_URL = 'https://job-listing-portal-psi-nine.vercel.app/api/auth';
 
 // @desc    Register new user
 // @route   POST /api/auth/signup
@@ -78,9 +67,9 @@ const registerUser = asyncHandler(async (req, res) => {
 
     let { name, email, password, role } = req.body;
 
-    // Sanitize inputs
-    name = sanitizeInput(name);
-    email = sanitizeInput(email)?.toLowerCase();
+    // Trim inputs (NoSQL injection prevented by express-mongo-sanitize middleware)
+    name = typeof name === 'string' ? name.trim() : name;
+    email = typeof email === 'string' ? email.trim().toLowerCase() : email;
 
     // Validation
     if (!name || !email || !password) {
@@ -167,8 +156,8 @@ const loginUser = asyncHandler(async (req, res) => {
 
     let { email, password } = req.body;
 
-    // Sanitize input
-    email = sanitizeInput(email)?.toLowerCase();
+    // Trim input (NoSQL injection prevented by express-mongo-sanitize middleware)
+    email = typeof email === 'string' ? email.trim().toLowerCase() : email;
 
     if (!email || !password) {
         res.status(400);
@@ -223,14 +212,23 @@ const validateToken = asyncHandler(async (req, res) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await User.findById(decoded.id).select('-password');
+        const user = await User.findById(decoded.id).select('_id name email role');
 
         if (!user) {
             res.status(404);
             throw new Error('User not found');
         }
 
-        res.status(200).json({ valid: true, user });
+        // Return ONLY minimal data needed for auth — never expose sensitive fields
+        res.status(200).json({
+            valid: true,
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+            }
+        });
     } catch (error) {
         res.status(401).json({ valid: false, message: 'Invalid token' });
     }

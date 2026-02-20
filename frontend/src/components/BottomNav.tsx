@@ -3,18 +3,29 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, Briefcase, Building2, Banknote, User } from 'lucide-react';
+import { Home, Briefcase, Building2, Banknote, User, LogOut } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
-const navItems = [
+const baseNavItems = [
     { name: 'Home', href: '/', icon: Home },
     { name: 'Jobs', href: '/jobs', icon: Briefcase },
     { name: 'Companies', href: '/companies', icon: Building2 },
     { name: 'Salaries', href: '/salaries', icon: Banknote },
-    { name: 'Profile', href: '/auth/login', icon: User },
 ];
 
 export default function BottomNav() {
     const pathname = usePathname();
+    const { user, logout } = useAuth();
+
+    // Build nav items dynamically based on auth state
+    const profileHref = user
+        ? (user.role === 'employer' ? '/dashboard/employer/profile' : '/dashboard/candidate/profile')
+        : '/auth/login';
+
+    const navItems = [
+        ...baseNavItems,
+        { name: user ? 'Profile' : 'Login', href: profileHref, icon: User },
+    ];
 
     return (
         <>
@@ -40,7 +51,7 @@ export default function BottomNav() {
                 }}
             >
                 {navItems.map((item) => {
-                    const isActive = pathname === item.href;
+                    const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
                     const Icon = item.icon;
 
                     return (

@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Modal from '@/components/Modal';
-// import { MOCK_JOBS } from '@/lib/mock_data';
 import { CheckCircle } from 'lucide-react';
 
 import api from '@/utils/api';
@@ -23,7 +22,8 @@ interface Job {
     postedAt: string;
 }
 
-export default function JobDetailsPage({ params }: { params: { id: string } }) {
+export default function JobDetailsPage() {
+    const { id } = useParams<{ id: string }>();
     const [job, setJob] = useState<Job | null>(null);
     const [loading, setLoading] = useState(true);
     const [applicationData, setApplicationData] = useState({ resume: '', coverLetter: '' });
@@ -44,48 +44,10 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
         }
     };
 
-    // Unwrap params using React.use() or just accept it as a promise in newer Next.js, 
-    // but specific to this version, if it's a client component, params might be passed directly 
-    // OR we need to treat it carefully. 
-    // However, in standard Next.js 13/14 client components, props are passed.
-    // Let's stick to standard useEffect fetch.
-
-    // NOTE: In Next.js 15, params is a Promise. If this is Next 15 (package.json said 14/15?), 
-    // we should be careful. 
-    // The package.json showed "next": "16.1.6".  Wait, Next 16?? 
-    // That's very new or a canary. 
-    // In strict Next.js 15+, params is a Promise.
-    // Since this is "use client", we can't await params in the component body directly unless we use `use(params)`.
-    // But safely, we can just use `React.useEffects` if we treat params as an object if it comes that way, 
-    // OR unwrapping it.
-    // Let's assume params might be a promise and handle it.
-
-    // Actually, to be safe with "use client" in Next 15:
-    // We should allow params to be any or unwrapped.
-    // But let's look at the existing code: `export default function JobDetailsPage({ params }: { params: { id: string } })`
-    // If it was working before as a client component, params was likely passed.
-    // I will use `useEffect` to fetch.
-
     useEffect(() => {
         const fetchJob = async () => {
-            // In Next.js 15, we might need to await params if passing it to a server component, 
-            // but here it is props. 
-            // To be safe against the Next.js 15 breaking change regarding params:
-            // We can check if params is a promise (it shouldn't be in client components if passed from layout, but page props changed).
-            // Actually, page props `params` is a Promise in Next.js 15 for *Server Components*. 
-            // For Client Components, it is still passed as props but accessing it might require unwrapping if we were strict. 
-            // Let's just try accessing `params.id`. IF it fails, we know it's the Promise issue.
-            // But usually `use client` pages receive resolved params if defined properly or passed down.
-            // Wait, `page.tsx` acts as the entry.
-
             try {
-                // If params is a promise (Next 15 change), we need to await it. 
-                // But we can't await in top level of use client.
-                // We'll assume params.id is available or we use `useParams` hook which is safer for client components.
-            } catch (e) { }
-
-            try {
-                const { data } = await api.get(`/jobs/${params.id}`);
+                const { data } = await api.get(`/jobs/${id}`);
                 setJob(data);
             } catch (error) {
                 console.error('Error fetching job:', error);
@@ -95,10 +57,10 @@ export default function JobDetailsPage({ params }: { params: { id: string } }) {
             }
         };
 
-        if (params?.id) {
+        if (id) {
             fetchJob();
         }
-    }, [params?.id]);
+    }, [id]);
 
     if (loading) return <div style={{ textAlign: 'center', padding: '4rem' }}>Loading job details...</div>;
 

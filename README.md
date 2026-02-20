@@ -49,7 +49,11 @@ We use a **Hybrid Workflow** to ensure security (no shared secrets) while allowi
     - Connect to your **Local MongoDB**.
     - Use **Remote Auth Verification**: It verifies tokens by asking the Deployed Server.
     - **Result:** You can login (via frontend) and your local backend accepts the token, even though you don't have the secret key!
-5.  **Get Data:** Run this command to populate your local DB with test user/jobs:
+5.  **Important:** To test your local backend with the frontend, create `frontend/.env.local` with:
+    ```env
+    NEXT_PUBLIC_API_URL=http://localhost:5000/api
+    ```
+6.  **Get Data:** Run this command to populate your local DB with test user/jobs:
     ```bash
     npm run seed:local
     ```

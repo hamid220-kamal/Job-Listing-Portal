@@ -41,10 +41,13 @@ const corsOptions = {
         const whitelist = [
             'http://localhost:3000',
             'http://localhost:3001',
+            'https://job-listing-portal-bwvf.vercel.app',
             process.env.FRONTEND_URL // Add your production domain
         ].filter(Boolean);
 
-        if (!origin || whitelist.indexOf(origin) !== -1) {
+        // Allow requests with no origin (e.g., Postman, server-to-server)
+        // Also allow Vercel preview deployments
+        if (!origin || whitelist.indexOf(origin) !== -1 || (origin && origin.endsWith('.vercel.app'))) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));

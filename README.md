@@ -1,5 +1,4 @@
-# Job Listing 
-# testing
+# Job Listing Portal
 
 
 A full-stack MERN application for connecting Job Seekers with Employers. Built with **Next.js**, **Express**, and **MongoDB**.

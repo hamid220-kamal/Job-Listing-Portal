@@ -1,5 +1,5 @@
 # Backend Architecture & Team Workflow
-# hello from rutuja
+
 ## 🚀 The "One Feature, One Folder" Rule
 
 To allow 6 developers to work on the same branch without conflicts, we have adopted a **Feature-Based Architecture**.

@@ -1,9 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import axios from 'axios';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+import api from '@/utils/api';
 
 interface User {
     _id: string;
@@ -47,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             setError(null);
             setLoading(true);
-            const response = await axios.post(`${API_URL}/auth/login`, {
+            const response = await api.post('/auth/login', {
                 email,
                 password,
             });
@@ -71,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             setError(null);
             setLoading(true);
-            const response = await axios.post(`${API_URL}/auth/signup`, {
+            const response = await api.post('/auth/signup', {
                 name,
                 email,
                 password,

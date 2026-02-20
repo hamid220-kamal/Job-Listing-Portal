@@ -128,7 +128,7 @@ export default function CandidateDashboard() {
                             backgroundColor: '#ffffff',
                             color: '#1f2937'
                         }}>
-                            Update Profile
+                            Edit Profile
                         </Button>
                     </Link>
                 </section>

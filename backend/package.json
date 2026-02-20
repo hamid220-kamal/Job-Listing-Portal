@@ -5,7 +5,12 @@
     "main": "index.js",
     "scripts": {
         "start": "node index.js",
-        "dev": "nodemon index.js"
+        "start:cloud": "node index.js --cloud",
+        "start:local": "node index.js --local",
+        "dev": "nodemon index.js",
+        "dev:local": "cross-env MONGO_URI=\"%MONGO_LOCAL%\" nodemon --ignore features/search/search.controller.js index.js --local",
+        "check-db": "node test-cloud-db.js",
+        "seed:cloud": "node seed.js"
     },
     "keywords": [
         "mern",

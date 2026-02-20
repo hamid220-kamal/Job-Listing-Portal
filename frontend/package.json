@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run server\" \"next dev\"",
-    "server": "node server/index.js",
+    "dev": "next dev",
+    "server": "echo 'Server should be run from backend directory'",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

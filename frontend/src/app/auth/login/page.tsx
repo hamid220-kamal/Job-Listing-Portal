@@ -37,7 +37,7 @@ function LoginForm() {
                 if (user.role === 'employer') {
                     router.push('/dashboard/employer');
                 } else {
-                    router.push('/dashboard/candidate');
+                    router.push(`/profile/candidate/${user._id}`);
                 }
             }
         } catch (err: any) {

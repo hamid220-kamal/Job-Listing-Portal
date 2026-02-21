@@ -24,11 +24,13 @@ export default function SignupPage() {
             // Use AuthContext signup — stores token + user and keeps them logged in
             await signup(formData.name, formData.email, formData.password, formData.role);
 
-            // Redirect to the correct dashboard based on their chosen role
+            // Redirect to the correct page based on their chosen role
+            const userData = localStorage.getItem('user');
+            const user = userData ? JSON.parse(userData) : null;
             if (formData.role === 'employer') {
                 router.push('/dashboard/employer');
             } else {
-                router.push('/dashboard/candidate');
+                router.push(user?._id ? `/profile/candidate/${user._id}` : '/jobs');
             }
         } catch (err: any) {
             setError(err.response?.data?.message || err.message || 'Something went wrong');

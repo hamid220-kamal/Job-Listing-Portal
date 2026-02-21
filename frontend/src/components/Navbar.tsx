@@ -224,9 +224,9 @@ export default function Navbar() {
                         <div className="desktop-only" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                             {user ? (
                                 <>
-                                    <Link href={user.role === 'employer' ? '/dashboard/employer' : '/dashboard/candidate'}>
+                                    <Link href={user.role === 'employer' ? '/dashboard/employer' : `/profile/candidate/${user._id}`}>
                                         <MagneticButton style={{ fontSize: '0.95rem', padding: '0.75rem 1.5rem', background: 'transparent', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
-                                            Dashboard
+                                            {user.role === 'employer' ? 'Dashboard' : 'My Profile'}
                                         </MagneticButton>
                                     </Link>
                                     <MagneticButton onClick={logout} style={{ fontSize: '0.95rem', padding: '0.75rem 1.75rem', background: '#DC2626', color: '#ffffff', fontWeight: 700, borderRadius: '99px', border: 'none', cursor: 'pointer', boxShadow: '0 0 20px rgba(220, 38, 38, 0.2)' }}>

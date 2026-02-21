@@ -8,23 +8,19 @@ const User = require('../auth/user.model');
 const getDashboardStats = async (req, res) => {
     try {
         const role = req.user?.role || 'candidate';
-        const userId = req.user.id;
+        const userId = req.user._id || req.user.id;
 
         if (role === 'employer') {
-            const [activeJobs, totalApps, shortlisted] = await Promise.all([
-                Job.countDocuments({ postedBy: userId }),
-                Application.countDocuments({
-                    job: { $in: await Job.find({ postedBy: userId }).distinct('_id') },
-                }),
-                Application.countDocuments({
-                    job: { $in: await Job.find({ postedBy: userId }).distinct('_id') },
-                    status: 'shortlisted',
-                }),
+            // Single query for job IDs, reuse for all counts
+            const jobIds = await Job.find({ postedBy: userId }).distinct('_id');
+            const [totalApps, shortlisted] = await Promise.all([
+                Application.countDocuments({ job: { $in: jobIds } }),
+                Application.countDocuments({ job: { $in: jobIds }, status: 'shortlisted' }),
             ]);
 
             return res.json({
                 role: 'employer',
-                stats: { activeJobs, totalApplications: totalApps, shortlistedCandidates: shortlisted },
+                stats: { activeJobs: jobIds.length, totalApplications: totalApps, shortlistedCandidates: shortlisted },
             });
         }
 

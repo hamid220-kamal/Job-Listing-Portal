@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Job = require('./job.model');
 
 // @desc    Get all jobs
@@ -21,6 +22,9 @@ const getJobs = async (req, res) => {
 // @access  Public
 const getJob = async (req, res) => {
     try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: 'Invalid job ID' });
+        }
         const job = await Job.findById(req.params.id)
             .populate('postedBy', 'name company email')
             .lean();
@@ -36,7 +40,7 @@ const getJob = async (req, res) => {
 // @access  Private (Employer only)
 const createJob = async (req, res) => {
     try {
-        const job = await Job.create({ ...req.body, postedBy: req.user.id });
+        const job = await Job.create({ ...req.body, postedBy: req.user._id || req.user.id });
         const populated = await job.populate('postedBy', 'name company');
         res.status(201).json(populated);
     } catch (err) {
@@ -55,10 +59,16 @@ const updateJob = async (req, res) => {
     try {
         const job = await Job.findById(req.params.id);
         if (!job) return res.status(404).json({ message: 'Job not found' });
-        if (job.postedBy.toString() !== req.user.id) {
+        const ownerId = req.user._id || req.user.id;
+        if (job.postedBy.toString() !== ownerId.toString()) {
             return res.status(403).json({ message: 'Not authorised' });
         }
-        Object.assign(job, req.body);
+        // Whitelist editable fields to prevent mass assignment
+        const allowed = ['title', 'company', 'location', 'type', 'salary',
+            'description', 'requirements', 'qualifications', 'responsibilities'];
+        for (const key of allowed) {
+            if (req.body[key] !== undefined) job[key] = req.body[key];
+        }
         await job.save();
         res.status(200).json(job);
     } catch (err) {
@@ -73,7 +83,7 @@ const deleteJob = async (req, res) => {
     try {
         const job = await Job.findById(req.params.id);
         if (!job) return res.status(404).json({ message: 'Job not found' });
-        if (job.postedBy.toString() !== req.user.id) {
+        if (job.postedBy.toString() !== (req.user._id || req.user.id).toString()) {
             return res.status(403).json({ message: 'Not authorised' });
         }
         await job.deleteOne();
@@ -88,7 +98,7 @@ const deleteJob = async (req, res) => {
 // @access  Private (Employer only)
 const getMyJobs = async (req, res) => {
     try {
-        const jobs = await Job.find({ postedBy: req.user.id })
+        const jobs = await Job.find({ postedBy: req.user._id || req.user.id })
             .sort('-createdAt')
             .lean();
         res.status(200).json(jobs);

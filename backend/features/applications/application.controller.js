@@ -7,15 +7,21 @@ const Job = require('../jobs/job.model');
 const applyJob = async (req, res) => {
     try {
         const jobId = req.params.jobId;
+        const userId = req.user._id || req.user.id;
         const job = await Job.findById(jobId);
         if (!job) return res.status(404).json({ message: 'Job not found' });
 
-        const exists = await Application.findOne({ job: jobId, applicant: req.user.id });
+        // Validate resume is provided
+        if (!req.body.resume) {
+            return res.status(400).json({ message: 'Please upload a resume before applying' });
+        }
+
+        const exists = await Application.findOne({ job: jobId, applicant: userId });
         if (exists) return res.status(400).json({ message: 'You have already applied for this job' });
 
         const application = await Application.create({
             job: jobId,
-            applicant: req.user.id,
+            applicant: userId,
             resume: req.body.resume,
             coverLetter: req.body.coverLetter,
         });
@@ -33,7 +39,7 @@ const applyJob = async (req, res) => {
 // @access  Private
 const getMyApplications = async (req, res) => {
     try {
-        const apps = await Application.find({ applicant: req.user.id })
+        const apps = await Application.find({ applicant: req.user._id || req.user.id })
             .populate('job', 'title company location type salary')
             .sort('-appliedAt')
             .lean();
@@ -54,7 +60,7 @@ const getJobApplications = async (req, res) => {
         // Verify job belongs to this employer
         const job = await Job.findById(req.params.jobId);
         if (!job) return res.status(404).json({ message: 'Job not found' });
-        if (job.postedBy.toString() !== req.user.id) {
+        if (job.postedBy.toString() !== (req.user._id || req.user.id).toString()) {
             return res.status(403).json({ message: 'Not authorised' });
         }
 
@@ -83,7 +89,7 @@ const updateApplicationStatus = async (req, res) => {
         if (!app) return res.status(404).json({ message: 'Application not found' });
 
         // Verify employer owns the job
-        if (app.job.postedBy.toString() !== req.user.id) {
+        if (app.job.postedBy.toString() !== (req.user._id || req.user.id).toString()) {
             return res.status(403).json({ message: 'Not authorised' });
         }
 

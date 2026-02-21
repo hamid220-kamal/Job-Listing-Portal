@@ -41,12 +41,7 @@ const generateToken = (id) => {
     });
 };
 
-// Generate Refresh Token
-const generateRefreshToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: '30d',
-    });
-};
+
 
 // @desc    Register new user
 // @route   POST /api/auth/signup
@@ -114,15 +109,6 @@ const registerUser = asyncHandler(async (req, res) => {
 
     if (user) {
         const token = generateToken(user._id);
-        const refreshToken = generateRefreshToken(user._id);
-
-        // Set HTTP-only cookie
-        res.cookie('refreshToken', refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-            sameSite: 'strict',
-            maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
-        });
 
         res.status(201).json({
             _id: user._id,
@@ -169,15 +155,6 @@ const loginUser = asyncHandler(async (req, res) => {
 
     if (user && (await user.matchPassword(password))) {
         const token = generateToken(user._id);
-        const refreshToken = generateRefreshToken(user._id);
-
-        // Set HTTP-only cookie
-        res.cookie('refreshToken', refreshToken, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
-            maxAge: 30 * 24 * 60 * 60 * 1000
-        });
 
         res.json({
             _id: user._id,

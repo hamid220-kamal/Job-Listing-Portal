@@ -93,9 +93,17 @@ const userSchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now },
 });
 
-// Auto-update `updatedAt` on save
+// Auto-update `updatedAt` and sanitise array fields on save
 userSchema.pre('save', async function (next) {
     this.updatedAt = new Date();
+
+    // Sanitise: ensure array fields are always arrays (never strings)
+    const arrayFields = ['skills', 'experience', 'education', 'companyBenefits'];
+    for (const f of arrayFields) {
+        if (this[f] !== undefined && !Array.isArray(this[f])) {
+            this[f] = [];
+        }
+    }
 
     if (!this.isModified('password')) {
         return next();

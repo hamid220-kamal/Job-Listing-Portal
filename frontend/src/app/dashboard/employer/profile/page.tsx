@@ -111,17 +111,29 @@ export default function EmployerProfile() {
     const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+
+        // Check file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setMsg({ ok: false, text: 'Image is too large. Please use an image smaller than 5MB.' });
+            return;
+        }
+
         setUploadingLogo(true);
         try {
             const fd = new FormData();
             fd.append('logo', file);
-            const { data } = await api.post('/profile/upload-logo', fd, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
+            const { data } = await api.post('/profile/upload-logo', fd);
             setForm(prev => ({ ...prev, logo: data.logo }));
-            setMsg({ ok: true, text: 'Logo uploaded!' });
+            setMsg({ ok: true, text: 'Logo uploaded successfully!' });
         } catch (err: any) {
-            setMsg({ ok: false, text: err.response?.data?.message || 'Logo upload failed' });
+            const serverMsg = err.response?.data?.message || '';
+            if (serverMsg.includes('file type')) {
+                setMsg({ ok: false, text: 'Please upload a JPG, PNG, or WebP image.' });
+            } else if (err.response?.status === 413) {
+                setMsg({ ok: false, text: 'Image is too large. Please use a smaller image.' });
+            } else {
+                setMsg({ ok: false, text: 'Could not upload logo. Please try again.' });
+            }
         } finally {
             setUploadingLogo(false);
         }
@@ -191,16 +203,6 @@ export default function EmployerProfile() {
                     <div className={s.headerInfo}>
                         <h1>{form.company || 'Your Company'}</h1>
                         <p>{form.industry ? `${form.industry} • ${form.companySize || ''} employees` : 'Add company details'}</p>
-                    </div>
-                    <div className={s.headerActions}>
-                        {user._id && (
-                            <Link href={`/profile/employer/${user._id}`}>
-                                <Button variant="outline" size="sm">👁 Public View</Button>
-                            </Link>
-                        )}
-                        <Link href="/dashboard/employer">
-                            <Button variant="secondary" size="sm">← Dashboard</Button>
-                        </Link>
                     </div>
                 </div>
 

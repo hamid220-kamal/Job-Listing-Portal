@@ -1,89 +1,100 @@
 const Application = require('./application.model');
 const Job = require('../jobs/job.model');
 
-// Dummy Application Controller with In-Memory Data
-
-// In-memory array to store applications
-let applications = [
-    {
-        _id: 'app-1',
-        job: {
-            _id: 'job-1',
-            title: 'Software Engineer',
-            company: 'Tech Corp',
-            location: 'Remote'
-        },
-        applicant: {
-            _id: 'dummy-user-id',
-            name: 'Dummy User',
-            email: 'dummy@example.com'
-        },
-        resume: 'https://example.com/resume.pdf',
-        coverLetter: 'I am a great fit.',
-        appliedAt: new Date(),
-    }
-];
-
 // @desc    Apply for a job
 // @route   POST /api/applications/:jobId
-// @access  Private
+// @access  Private (Candidate only)
 const applyJob = async (req, res) => {
-    // Check if already applied (simplified)
-    const existingApplication = applications.find(
-        app => app.job._id === req.params.jobId && app.applicant._id === req.user.id
-    );
+    try {
+        const jobId = req.params.jobId;
+        const job = await Job.findById(jobId);
+        if (!job) return res.status(404).json({ message: 'Job not found' });
 
-    if (existingApplication) {
-        return res.status(400).json({ message: 'You have already applied for this job' });
+        const exists = await Application.findOne({ job: jobId, applicant: req.user.id });
+        if (exists) return res.status(400).json({ message: 'You have already applied for this job' });
+
+        const application = await Application.create({
+            job: jobId,
+            applicant: req.user.id,
+            resume: req.body.resume,
+            coverLetter: req.body.coverLetter,
+        });
+
+        const populated = await application.populate('job', 'title company location type salary');
+        res.status(201).json(populated);
+    } catch (err) {
+        console.error('applyJob error:', err);
+        res.status(500).json({ message: 'Server error' });
     }
-
-    const application = {
-        _id: 'app-' + Date.now(),
-        // In a real app we'd look up the job details, here we mock it or assume it's passed/known
-        job: {
-            _id: req.params.jobId,
-            title: 'Mock Job Title', // hard to get real title without looking up in job controller or DB
-            company: 'Mock Company',
-            location: 'Mock Location'
-        },
-        applicant: {
-            _id: req.user.id,
-            name: req.user.name,
-            email: req.user.email
-        },
-        resume: req.body.resume,
-        coverLetter: req.body.coverLetter,
-        appliedAt: new Date()
-    };
-
-    applications.push(application);
-
-    res.status(201).json(application);
 };
 
-// @desc    Get user applications
+// @desc    Get current user's applications
 // @route   GET /api/applications/me
 // @access  Private
 const getMyApplications = async (req, res) => {
-    const myApps = applications.filter(app => app.applicant._id === req.user.id);
-    res.status(200).json(myApps);
+    try {
+        const apps = await Application.find({ applicant: req.user.id })
+            .populate('job', 'title company location type salary')
+            .sort('-appliedAt')
+            .lean();
+        res.status(200).json(apps);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
 };
 
-// @desc    Get applications for a job (Employer only)
+// @desc    Get applications for a specific job (Employer only)
 // @route   GET /api/applications/job/:jobId
 // @access  Private (Employer only)
 const getJobApplications = async (req, res) => {
-    // Role check — only employers can view job applications
-    if (!req.user || req.user.role !== 'employer') {
-        return res.status(403).json({ message: 'Only employers can view job applications' });
+    try {
+        if (!req.user || req.user.role !== 'employer') {
+            return res.status(403).json({ message: 'Only employers can view job applications' });
+        }
+        // Verify job belongs to this employer
+        const job = await Job.findById(req.params.jobId);
+        if (!job) return res.status(404).json({ message: 'Job not found' });
+        if (job.postedBy.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'Not authorised' });
+        }
+
+        const apps = await Application.find({ job: req.params.jobId })
+            .populate('applicant', 'name email avatar headline skills')
+            .sort('-appliedAt')
+            .lean();
+        res.status(200).json(apps);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
     }
-
-    const jobApps = applications.filter(app => app.job._id === req.params.jobId);
-    res.status(200).json(jobApps);
 };
 
-module.exports = {
-    applyJob,
-    getMyApplications,
-    getJobApplications
+// @desc    Update application status (Employer only)
+// @route   PATCH /api/applications/:id/status
+// @access  Private (Employer only)
+const updateApplicationStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        const valid = ['pending', 'reviewed', 'shortlisted', 'rejected', 'accepted'];
+        if (!valid.includes(status)) {
+            return res.status(400).json({ message: `Invalid status. Must be one of: ${valid.join(', ')}` });
+        }
+
+        const app = await Application.findById(req.params.id).populate('job');
+        if (!app) return res.status(404).json({ message: 'Application not found' });
+
+        // Verify employer owns the job
+        if (app.job.postedBy.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'Not authorised' });
+        }
+
+        app.status = status;
+        await app.save();
+
+        const populated = await app.populate('applicant', 'name email avatar headline skills');
+        res.status(200).json(populated);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
 };
+
+module.exports = { applyJob, getMyApplications, getJobApplications, updateApplicationStatus };

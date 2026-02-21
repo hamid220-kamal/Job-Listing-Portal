@@ -1,54 +1,114 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/Button';
 import Link from 'next/link';
 import api from '@/utils/api';
 
+/* ─── Types ─── */
 interface Job {
-    _id: string;
-    title: string;
-    company: string;
-    location: string;
-    salary: string;
+    _id: string; title: string; company: string;
+    location: string; type: string; salary: string;
     createdAt: string;
 }
+
+interface Applicant {
+    _id: string; name: string; email: string;
+    avatar?: string; headline?: string; skills?: string[];
+}
+
+interface Application {
+    _id: string;
+    applicant: Applicant;
+    status: 'pending' | 'reviewed' | 'shortlisted' | 'rejected' | 'accepted';
+    appliedAt: string;
+    resume?: string;
+    coverLetter?: string;
+}
+
+/* ─── Status styling ─── */
+const statusStyle: Record<string, { bg: string; color: string; label: string }> = {
+    pending: { bg: '#fef3c7', color: '#92400e', label: 'Pending' },
+    reviewed: { bg: '#dbeafe', color: '#1e40af', label: 'Reviewed' },
+    shortlisted: { bg: '#d1fae5', color: '#065f46', label: 'Shortlisted' },
+    rejected: { bg: '#fee2e2', color: '#991b1b', label: 'Rejected' },
+    accepted: { bg: '#d1fae5', color: '#14532d', label: 'Accepted' },
+};
 
 export default function EmployerDashboard() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
     const [jobs, setJobs] = useState<Job[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+    const [applicants, setApplicants] = useState<Application[]>([]);
+    const [appsLoading, setAppsLoading] = useState(false);
+    const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-    // Route guard — redirect non-employers
+    // Route guard
     useEffect(() => {
         if (!authLoading && (!user || user.role !== 'employer')) {
             router.push(user ? '/dashboard/candidate' : '/auth/login');
         }
     }, [user, authLoading, router]);
 
-    // Fetch employer's posted jobs
+    // Fetch employer's jobs
     useEffect(() => {
-        const fetchJobs = async () => {
+        if (!user || user.role !== 'employer') return;
+        (async () => {
             try {
-                const res = await api.get('/jobs');
-                // Filter jobs posted by this employer
-                const myJobs = res.data.filter((job: any) => job.postedBy?._id === user?._id);
-                setJobs(myJobs);
+                const { data } = await api.get('/jobs/mine');
+                setJobs(data);
+                if (data.length > 0) setSelectedJobId(data[0]._id);
             } catch (err) {
                 console.error('Failed to fetch jobs:', err);
             } finally {
                 setLoading(false);
             }
-        };
-
-        if (user && user.role === 'employer') {
-            fetchJobs();
-        }
+        })();
     }, [user]);
+
+    // Fetch applicants for selected job
+    useEffect(() => {
+        if (!selectedJobId) { setApplicants([]); return; }
+        let cancelled = false;
+        (async () => {
+            setAppsLoading(true);
+            try {
+                const { data } = await api.get(`/applications/job/${selectedJobId}`);
+                if (!cancelled) setApplicants(data);
+            } catch {
+                if (!cancelled) setApplicants([]);
+            } finally {
+                if (!cancelled) setAppsLoading(false);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [selectedJobId]);
+
+    // Update application status
+    const updateStatus = async (appId: string, status: string) => {
+        setUpdatingId(appId);
+        try {
+            const { data } = await api.patch(`/applications/${appId}/status`, { status });
+            setApplicants(prev => prev.map(a => a._id === appId ? { ...a, status: data.status } : a));
+        } catch (err) {
+            console.error('Status update failed:', err);
+        } finally {
+            setUpdatingId(null);
+        }
+    };
+
+    // Stats
+    const totalApplicants = applicants.length;
+    const statusCounts = useMemo(() => {
+        const c = { pending: 0, reviewed: 0, shortlisted: 0, rejected: 0, accepted: 0 };
+        applicants.forEach(a => { if (c[a.status] !== undefined) c[a.status]++; });
+        return c;
+    }, [applicants]);
 
     if (authLoading || !user || user.role !== 'employer') {
         return (
@@ -58,134 +118,246 @@ export default function EmployerDashboard() {
         );
     }
 
+    const statCards = [
+        { label: 'Jobs Posted', icon: '📂', value: jobs.length, accent: '#6366f1' },
+        { label: 'Total Applicants', icon: '👥', value: totalApplicants, accent: '#3b82f6' },
+        { label: 'Shortlisted', icon: '⭐', value: statusCounts.shortlisted, accent: '#f59e0b' },
+        { label: 'Accepted', icon: '✅', value: statusCounts.accepted, accent: '#10b981' },
+    ];
+
     return (
-        <div className="container" style={{ padding: '4rem 1.5rem' }}>
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-            >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <div className="container" style={{ padding: '2rem 1.5rem 4rem', maxWidth: 1040 }}>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+
+                {/* ── Header ── */}
+                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
                     <div>
-                        <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                            Welcome, {user.name}!
+                        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
+                            Welcome back, {user.name?.split(' ')[0]}! 👋
                         </h1>
-                        <p style={{ color: 'var(--muted-foreground)' }}>
-                            Manage your job postings and find the best candidates.
+                        <p style={{ color: 'var(--muted-foreground)', fontSize: '0.9rem', marginTop: '0.25rem' }}>
+                            Manage your job postings and review candidates.
                         </p>
                     </div>
                     <Link href="/jobs/new">
-                        <Button>+ Post New Job</Button>
+                        <Button style={{ background: 'var(--gradient-primary)', border: 'none', boxShadow: 'var(--shadow-glow)' }}>
+                            ➕ Post New Job
+                        </Button>
                     </Link>
+                </header>
+
+                {/* ── Stat Cards ── */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+                    {statCards.map((sc, i) => (
+                        <motion.div key={sc.label}
+                            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: i * 0.08 }}
+                            style={{
+                                padding: '1.25rem', borderRadius: 'var(--radius-lg)',
+                                border: '1px solid var(--border)', background: 'var(--surface)',
+                                display: 'flex', alignItems: 'center', gap: '1rem',
+                            }}
+                        >
+                            <div style={{
+                                width: 44, height: 44, borderRadius: 12, display: 'flex',
+                                alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem',
+                                background: `${sc.accent}15`, flexShrink: 0,
+                            }}>{sc.icon}</div>
+                            <div>
+                                <p style={{ fontSize: '1.5rem', fontWeight: 800, lineHeight: 1 }}>
+                                    {loading ? '–' : sc.value}
+                                </p>
+                                <p style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', marginTop: 2 }}>{sc.label}</p>
+                            </div>
+                        </motion.div>
+                    ))}
                 </div>
 
-                {/* Stats Cards */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '3rem' }}>
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        style={{
-                            padding: '1.5rem',
-                            backgroundColor: 'var(--surface)',
-                            border: '1px solid var(--border)',
-                            borderRadius: 'var(--radius-lg)',
-                        }}
-                    >
-                        <p style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)', marginBottom: '0.5rem' }}>Active Jobs</p>
-                        <p style={{ fontSize: '2rem', fontWeight: 700 }}>{jobs.length}</p>
-                    </motion.div>
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                        style={{
-                            padding: '1.5rem',
-                            backgroundColor: 'var(--surface)',
-                            border: '1px solid var(--border)',
-                            borderRadius: 'var(--radius-lg)',
-                        }}
-                    >
-                        <p style={{ fontSize: '0.875rem', color: 'var(--muted-foreground)', marginBottom: '0.5rem' }}>Total Posted</p>
-                        <p style={{ fontSize: '2rem', fontWeight: 700 }}>{jobs.length}</p>
-                    </motion.div>
+                {/* ── Quick Actions ── */}
+                <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+                    <Link href={`/profile/employer/${user._id}`}><Button variant="outline" size="sm">🏢 Company Profile</Button></Link>
+                    <Link href="/dashboard/employer/profile"><Button variant="outline" size="sm">✏️ Edit Profile</Button></Link>
                 </div>
 
-                {/* Jobs List */}
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1.5rem' }}>Your Job Postings</h2>
+                {/* ── Two-column: Job List + Applicants ── */}
+                <div style={{ display: 'grid', gridTemplateColumns: jobs.length > 0 ? '300px 1fr' : '1fr', gap: '1.5rem', alignItems: 'start' }}>
 
-                {loading ? (
-                    <p style={{ color: 'var(--muted-foreground)', textAlign: 'center', padding: '3rem' }}>Loading your jobs...</p>
-                ) : jobs.length === 0 ? (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        style={{
-                            textAlign: 'center',
-                            padding: '4rem 2rem',
-                            border: '2px dashed var(--border)',
-                            borderRadius: 'var(--radius-lg)',
-                        }}
-                    >
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>No jobs posted yet</h3>
-                        <p style={{ color: 'var(--muted-foreground)', marginBottom: '1.5rem' }}>
-                            Post your first job to start finding great candidates!
-                        </p>
-                        <Link href="/jobs/new">
-                            <Button>Post Your First Job</Button>
-                        </Link>
-                    </motion.div>
-                ) : (
-                    <div style={{
-                        backgroundColor: 'var(--surface)',
-                        border: '1px solid var(--border)',
-                        borderRadius: 'var(--radius)',
-                        overflow: 'hidden'
-                    }}>
-                        {/* Table Header */}
-                        <div style={{
-                            padding: '1rem 1.5rem',
-                            borderBottom: '1px solid var(--border)',
-                            backgroundColor: 'var(--muted)',
-                            display: 'grid',
-                            gridTemplateColumns: '2fr 1fr 1fr 1fr',
-                            fontWeight: 600,
-                            fontSize: '0.875rem'
-                        }}>
-                            <div>Job Title</div>
-                            <div>Location</div>
-                            <div>Salary</div>
-                            <div>Posted</div>
-                        </div>
+                    {/* ── Job List Side ── */}
+                    <section>
+                        <h2 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '0.75rem' }}>📂 Your Jobs</h2>
+                        {loading ? (
+                            <p style={{ color: 'var(--muted-foreground)', padding: '2rem', textAlign: 'center' }}>Loading…</p>
+                        ) : jobs.length === 0 ? (
+                            <div style={{
+                                textAlign: 'center', padding: '2.5rem 1.5rem',
+                                border: '2px dashed var(--border)', borderRadius: 'var(--radius-lg)',
+                            }}>
+                                <p style={{ fontWeight: 600, marginBottom: '0.35rem' }}>No jobs posted yet</p>
+                                <p style={{ color: 'var(--muted-foreground)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+                                    Post your first job to start receiving applications!
+                                </p>
+                                <Link href="/jobs/new"><Button size="sm">Post Your First Job</Button></Link>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                {jobs.map(job => (
+                                    <button key={job._id} onClick={() => setSelectedJobId(job._id)}
+                                        style={{
+                                            padding: '0.75rem 1rem', borderRadius: 'var(--radius)',
+                                            border: selectedJobId === job._id ? '2px solid var(--foreground)' : '1px solid var(--border)',
+                                            background: selectedJobId === job._id ? 'var(--secondary)' : 'var(--surface)',
+                                            cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
+                                            transition: 'all 0.15s',
+                                        }}
+                                    >
+                                        <p style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: 2 }}>{job.title}</p>
+                                        <p style={{ fontSize: '0.72rem', color: 'var(--muted-foreground)' }}>
+                                            {job.location} · {new Date(job.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                        </p>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </section>
 
-                        {/* Job Rows */}
-                        {jobs.map((job, i) => (
-                            <motion.div
-                                key={job._id}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: i * 0.05 }}
-                                style={{
-                                    padding: '1.25rem 1.5rem',
-                                    borderBottom: '1px solid var(--border)',
-                                    display: 'grid',
-                                    gridTemplateColumns: '2fr 1fr 1fr 1fr',
-                                    alignItems: 'center',
-                                    fontSize: '0.875rem'
-                                }}
-                            >
-                                <div>
-                                    <div style={{ fontWeight: 600 }}>{job.title}</div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>{job.company}</div>
+                    {/* ── Applicants Panel ── */}
+                    {jobs.length > 0 && (
+                        <section>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                                <h2 style={{ fontSize: '1rem', fontWeight: 700 }}>
+                                    👥 Applicants {totalApplicants > 0 && `(${totalApplicants})`}
+                                </h2>
+                                {totalApplicants > 0 && (
+                                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                        {(['pending', 'shortlisted', 'accepted', 'rejected'] as const).map(st => (
+                                            <span key={st} style={{
+                                                fontSize: '0.65rem', padding: '0.15rem 0.4rem', borderRadius: '999px',
+                                                background: statusStyle[st].bg, color: statusStyle[st].color, fontWeight: 600,
+                                            }}>{statusCounts[st]} {st}</span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {appsLoading ? (
+                                <p style={{ color: 'var(--muted-foreground)', textAlign: 'center', padding: '2rem' }}>Loading applicants…</p>
+                            ) : applicants.length === 0 ? (
+                                <div style={{
+                                    textAlign: 'center', padding: '2.5rem 1.5rem',
+                                    border: '2px dashed var(--border)', borderRadius: 'var(--radius-lg)',
+                                }}>
+                                    <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>No applicants yet</p>
+                                    <p style={{ color: 'var(--muted-foreground)', fontSize: '0.85rem' }}>
+                                        Share your job listing to start receiving applications.
+                                    </p>
                                 </div>
-                                <div style={{ color: 'var(--muted-foreground)' }}>{job.location || '—'}</div>
-                                <div style={{ fontWeight: 500 }}>{job.salary ? `$${job.salary}` : '—'}</div>
-                                <div style={{ color: 'var(--muted-foreground)' }}>
-                                    {new Date(job.createdAt).toLocaleDateString()}
+                            ) : (
+                                <div style={{ display: 'grid', gap: '0.75rem' }}>
+                                    <AnimatePresence>
+                                        {applicants.map((app, i) => {
+                                            const st = statusStyle[app.status] || statusStyle.pending;
+                                            const initials = app.applicant.name?.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?';
+                                            return (
+                                                <motion.div key={app._id}
+                                                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                                                    exit={{ opacity: 0 }} transition={{ delay: i * 0.04 }}
+                                                    style={{
+                                                        border: '1px solid var(--border)', borderRadius: 'var(--radius)',
+                                                        padding: '1rem 1.25rem', background: 'var(--surface)',
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                            {app.applicant.avatar ? (
+                                                                <img src={app.applicant.avatar} alt="" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }} />
+                                                            ) : (
+                                                                <div style={{
+                                                                    width: 36, height: 36, borderRadius: '50%', display: 'flex',
+                                                                    alignItems: 'center', justifyContent: 'center',
+                                                                    background: 'var(--secondary)', fontWeight: 700, fontSize: '0.75rem',
+                                                                }}>{initials}</div>
+                                                            )}
+                                                            <div>
+                                                                <Link href={`/profile/candidate/${app.applicant._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                                                    <p style={{ fontWeight: 600, fontSize: '0.9rem' }}>{app.applicant.name}</p>
+                                                                </Link>
+                                                                <p style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>
+                                                                    {app.applicant.headline || app.applicant.email}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <span style={{
+                                                            padding: '0.2rem 0.6rem', borderRadius: '999px', fontSize: '0.7rem',
+                                                            fontWeight: 600, background: st.bg, color: st.color,
+                                                        }}>{st.label}</span>
+                                                    </div>
+
+                                                    {/* Skills */}
+                                                    {app.applicant.skills && app.applicant.skills.length > 0 && (
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3rem', marginBottom: '0.5rem' }}>
+                                                            {app.applicant.skills.slice(0, 5).map(sk => (
+                                                                <span key={sk} style={{
+                                                                    fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '999px',
+                                                                    background: 'var(--secondary)', border: '1px solid var(--border)',
+                                                                }}>{sk}</span>
+                                                            ))}
+                                                            {app.applicant.skills.length > 5 && (
+                                                                <span style={{ fontSize: '0.65rem', color: 'var(--muted-foreground)' }}>+{app.applicant.skills.length - 5}</span>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                                        <p style={{ fontSize: '0.7rem', color: 'var(--muted-foreground)' }}>
+                                                            Applied {new Date(app.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                        </p>
+                                                        <div style={{ display: 'flex', gap: '0.35rem' }}>
+                                                            {app.status !== 'shortlisted' && app.status !== 'accepted' && (
+                                                                <button onClick={() => updateStatus(app._id, 'shortlisted')}
+                                                                    disabled={updatingId === app._id}
+                                                                    style={{
+                                                                        fontSize: '0.7rem', padding: '0.25rem 0.6rem', borderRadius: 'var(--radius)',
+                                                                        background: '#10b981', color: '#fff', border: 'none', cursor: 'pointer',
+                                                                        fontWeight: 600, fontFamily: 'inherit', opacity: updatingId === app._id ? 0.5 : 1,
+                                                                    }}>⭐ Shortlist</button>
+                                                            )}
+                                                            {app.status !== 'accepted' && (
+                                                                <button onClick={() => updateStatus(app._id, 'accepted')}
+                                                                    disabled={updatingId === app._id}
+                                                                    style={{
+                                                                        fontSize: '0.7rem', padding: '0.25rem 0.6rem', borderRadius: 'var(--radius)',
+                                                                        background: '#065f46', color: '#fff', border: 'none', cursor: 'pointer',
+                                                                        fontWeight: 600, fontFamily: 'inherit', opacity: updatingId === app._id ? 0.5 : 1,
+                                                                    }}>✅ Accept</button>
+                                                            )}
+                                                            {app.status !== 'rejected' && (
+                                                                <button onClick={() => updateStatus(app._id, 'rejected')}
+                                                                    disabled={updatingId === app._id}
+                                                                    style={{
+                                                                        fontSize: '0.7rem', padding: '0.25rem 0.6rem', borderRadius: 'var(--radius)',
+                                                                        background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer',
+                                                                        fontWeight: 600, fontFamily: 'inherit', opacity: updatingId === app._id ? 0.5 : 1,
+                                                                    }}>❌ Reject</button>
+                                                            )}
+                                                            <Link href={`/profile/candidate/${app.applicant._id}`}>
+                                                                <button style={{
+                                                                    fontSize: '0.7rem', padding: '0.25rem 0.6rem', borderRadius: 'var(--radius)',
+                                                                    background: 'var(--secondary)', color: 'var(--foreground)', border: '1px solid var(--border)',
+                                                                    cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit',
+                                                                }}>👤 View Profile</button>
+                                                            </Link>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            );
+                                        })}
+                                    </AnimatePresence>
                                 </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                )}
+                            )}
+                        </section>
+                    )}
+                </div>
+
             </motion.div>
         </div>
     );

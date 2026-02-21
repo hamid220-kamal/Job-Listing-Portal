@@ -4,7 +4,7 @@ const User = require('./user.model');
 const asyncHandler = require('express-async-handler');
 
 // Deployed Backend URL for Remote Auth Proxy
-const AUTH_SERVER_URL = 'https://job-listing-portal-psi-nine.vercel.app/api/auth';
+const AUTH_SERVER_URL = 'https://job-listing-portal-ten-omega.vercel.app/api/auth';
 
 // Password strength validation
 const validatePassword = (password) => {

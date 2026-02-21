@@ -163,17 +163,24 @@ export default function CandidateProfile() {
     const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+            setMsg({ ok: false, text: 'Image is too large. Please use an image smaller than 5MB.' });
+            return;
+        }
         setUploadingAvatar(true);
         try {
             const fd = new FormData();
             fd.append('avatar', file);
-            const { data } = await api.post('/profile/upload-avatar', fd, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
+            const { data } = await api.post('/profile/upload-avatar', fd);
             setForm(prev => ({ ...prev, avatar: data.avatar }));
-            setMsg({ ok: true, text: 'Avatar uploaded!' });
+            setMsg({ ok: true, text: 'Profile photo uploaded!' });
         } catch (err: any) {
-            setMsg({ ok: false, text: err.response?.data?.message || 'Avatar upload failed' });
+            const serverMsg = err.response?.data?.message || '';
+            if (serverMsg.includes('file type')) {
+                setMsg({ ok: false, text: 'Please upload a JPG, PNG, or WebP image.' });
+            } else {
+                setMsg({ ok: false, text: 'Could not upload photo. Please try again.' });
+            }
         } finally {
             setUploadingAvatar(false);
         }
@@ -183,17 +190,24 @@ export default function CandidateProfile() {
     const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+            setMsg({ ok: false, text: 'File is too large. Please use a file smaller than 5MB.' });
+            return;
+        }
         setUploadingResume(true);
         try {
             const fd = new FormData();
             fd.append('resume', file);
-            const { data } = await api.post('/profile/upload-resume', fd, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
+            const { data } = await api.post('/profile/upload-resume', fd);
             setForm(prev => ({ ...prev, resume: data.resume, resumeFileName: data.resumeFileName }));
             setMsg({ ok: true, text: 'Resume uploaded!' });
         } catch (err: any) {
-            setMsg({ ok: false, text: err.response?.data?.message || 'Resume upload failed' });
+            const serverMsg = err.response?.data?.message || '';
+            if (serverMsg.includes('file type')) {
+                setMsg({ ok: false, text: 'Please upload a PDF, DOC, or DOCX file.' });
+            } else {
+                setMsg({ ok: false, text: 'Could not upload resume. Please try again.' });
+            }
         } finally {
             setUploadingResume(false);
         }

@@ -53,7 +53,7 @@ const corsOptions = {
         const whitelist = [
             'http://localhost:3000',
             'http://localhost:3001',
-            'https://job-listing-portal-bwvf.vercel.app',
+            'https://job-listing-portal-ten-omega.vercel.app',
             process.env.FRONTEND_URL // Add your production domain
         ].filter(Boolean);
 

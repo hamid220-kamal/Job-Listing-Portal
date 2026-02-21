@@ -35,7 +35,7 @@ function LoginForm() {
             if (userData) {
                 const user = JSON.parse(userData);
                 if (user.role === 'employer') {
-                    router.push('/dashboard/employer');
+                    router.push(`/profile/employer/${user._id}`);
                 } else {
                     router.push(`/profile/candidate/${user._id}`);
                 }

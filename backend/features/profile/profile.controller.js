@@ -71,6 +71,14 @@ const updateProfile = asyncHandler(async (req, res) => {
         throw new Error('User not found');
     }
 
+    // Sanitise array fields — convert empty strings / non-arrays to []
+    const arrayFields = ['skills', 'experience', 'education', 'companyBenefits'];
+    for (const f of arrayFields) {
+        if (req.body[f] !== undefined && !Array.isArray(req.body[f])) {
+            req.body[f] = [];
+        }
+    }
+
     // Common fields
     const commonFields = ['name', 'phone', 'headline', 'avatar', 'location'];
     for (const f of commonFields) {
@@ -96,12 +104,24 @@ const updateProfile = asyncHandler(async (req, res) => {
         }
     }
 
-    const saved = await user.save();
-    const completeness = saved.getCompleteness();
-
-    const obj = saved.toObject();
-    delete obj.password;
-    res.json({ ...obj, completeness });
+    try {
+        const saved = await user.save({ validateModifiedOnly: true });
+        const completeness = saved.getCompleteness();
+        const obj = saved.toObject();
+        delete obj.password;
+        res.json({ ...obj, completeness });
+    } catch (err) {
+        if (err.name === 'ValidationError') {
+            const unique = [...new Set(Object.values(err.errors).map(e => {
+                const field = e.path || 'this field';
+                if (e.message.includes('is required')) return `Please fill in ${field}`;
+                return 'There was a problem saving your profile. Please check your details and try again.';
+            }))];
+            res.status(400);
+            throw new Error(unique.join('. '));
+        }
+        throw err;
+    }
 });
 
 // ─── POST /api/profile/upload-avatar — upload avatar ─────────
@@ -109,7 +129,7 @@ const updateProfile = asyncHandler(async (req, res) => {
 const uploadAvatar = asyncHandler(async (req, res) => {
     if (!req.file) {
         res.status(400);
-        throw new Error('No file provided');
+        throw new Error('Please select a photo to upload');
     }
 
     const user = await User.findById(req.user._id);
@@ -124,11 +144,14 @@ const uploadAvatar = asyncHandler(async (req, res) => {
     }
 
     const result = await uploadToCloudinary(req.file.buffer, 'avatars', 'image');
-    user.avatar = result.url;
-    user.avatarPublicId = result.publicId;
-    await user.save();
 
-    res.json({ avatar: result.url, message: 'Avatar uploaded successfully' });
+    // Use findByIdAndUpdate to avoid full-document validation
+    await User.findByIdAndUpdate(req.user._id, {
+        avatar: result.url,
+        avatarPublicId: result.publicId,
+    });
+
+    res.json({ avatar: result.url, message: 'Profile photo uploaded!' });
 });
 
 // ─── POST /api/profile/upload-resume — upload resume ─────────
@@ -136,7 +159,7 @@ const uploadAvatar = asyncHandler(async (req, res) => {
 const uploadResume = asyncHandler(async (req, res) => {
     if (!req.file) {
         res.status(400);
-        throw new Error('No file provided');
+        throw new Error('Please select a file to upload');
     }
 
     const user = await User.findById(req.user._id);
@@ -151,15 +174,17 @@ const uploadResume = asyncHandler(async (req, res) => {
     }
 
     const result = await uploadToCloudinary(req.file.buffer, 'resumes', 'raw');
-    user.resume = result.url;
-    user.resumePublicId = result.publicId;
-    user.resumeFileName = req.file.originalname;
-    await user.save();
+
+    await User.findByIdAndUpdate(req.user._id, {
+        resume: result.url,
+        resumePublicId: result.publicId,
+        resumeFileName: req.file.originalname,
+    });
 
     res.json({
         resume: result.url,
         resumeFileName: req.file.originalname,
-        message: 'Resume uploaded successfully',
+        message: 'Resume uploaded!',
     });
 });
 
@@ -168,7 +193,7 @@ const uploadResume = asyncHandler(async (req, res) => {
 const uploadLogo = asyncHandler(async (req, res) => {
     if (!req.file) {
         res.status(400);
-        throw new Error('No file provided');
+        throw new Error('Please select an image to upload');
     }
 
     const user = await User.findById(req.user._id);
@@ -182,11 +207,14 @@ const uploadLogo = asyncHandler(async (req, res) => {
     }
 
     const result = await uploadToCloudinary(req.file.buffer, 'logos', 'image');
-    user.logo = result.url;
-    user.logoPublicId = result.publicId;
-    await user.save();
 
-    res.json({ logo: result.url, message: 'Logo uploaded successfully' });
+    // Use findByIdAndUpdate to avoid full-document validation
+    await User.findByIdAndUpdate(req.user._id, {
+        logo: result.url,
+        logoPublicId: result.publicId,
+    });
+
+    res.json({ logo: result.url, message: 'Logo uploaded!' });
 });
 
 // ─── GET /api/profile/completeness — profile score ───────────

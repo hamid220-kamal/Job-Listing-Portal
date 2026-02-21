@@ -28,7 +28,7 @@ export default function SignupPage() {
             const userData = localStorage.getItem('user');
             const user = userData ? JSON.parse(userData) : null;
             if (formData.role === 'employer') {
-                router.push('/dashboard/employer');
+                router.push(user?._id ? `/profile/employer/${user._id}` : '/dashboard/employer');
             } else {
                 router.push(user?._id ? `/profile/candidate/${user._id}` : '/jobs');
             }

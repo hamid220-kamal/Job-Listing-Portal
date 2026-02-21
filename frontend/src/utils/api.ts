@@ -1,12 +1,9 @@
 import axios, { InternalAxiosRequestConfig, AxiosError } from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://job-listing-portal-psi-nine.vercel.app/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://job-listing-portal-ten-omega.vercel.app/api';
 
 const api = axios.create({
     baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
 });
 
 // Add a request interceptor to include the auth token

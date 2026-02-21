@@ -1,137 +1,100 @@
 const Job = require('./job.model');
 
-// In-memory array to store jobs
-let jobs = [
-    {
-        _id: 'job-1',
-        title: 'Software Engineer',
-        company: 'Tech Corp',
-        location: 'Remote',
-        description: 'Great job opportunity.',
-        salary: '120000',
-        postedBy: {
-            _id: 'dummy-user-id',
-            name: 'Dummy User',
-            company: 'Tech Corp'
-        },
-        createdAt: new Date(),
-    },
-    {
-        _id: 'job-2',
-        title: 'Product Manager',
-        company: 'Product Co',
-        location: 'New York',
-        description: 'Lead the product team.',
-        salary: '140000',
-        postedBy: {
-            _id: 'dummy-user-id-2',
-            name: 'Another User',
-            company: 'Product Co'
-        },
-        createdAt: new Date(),
-    }
-];
-
 // @desc    Get all jobs
 // @route   GET /api/jobs
 // @access  Public
 const getJobs = async (req, res) => {
-    res.status(200).json(jobs);
+    try {
+        const jobs = await Job.find()
+            .populate('postedBy', 'name company')
+            .sort('-createdAt')
+            .lean();
+        res.status(200).json(jobs);
+    } catch (err) {
+        console.error('getJobs error:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
 };
 
 // @desc    Get single job
 // @route   GET /api/jobs/:id
 // @access  Public
 const getJob = async (req, res) => {
-    const job = jobs.find(j => j._id === req.params.id);
-
-    if (!job) {
-        res.status(404).json({ message: 'Job not found' });
-        return;
+    try {
+        const job = await Job.findById(req.params.id)
+            .populate('postedBy', 'name company email')
+            .lean();
+        if (!job) return res.status(404).json({ message: 'Job not found' });
+        res.status(200).json(job);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
     }
-
-    res.status(200).json(job);
 };
 
 // @desc    Create new job
 // @route   POST /api/jobs
-// @access  Private
+// @access  Private (Employer only)
 const createJob = async (req, res) => {
-    if (!req.body.title || !req.body.company || !req.body.salary) {
-        res.status(400).json({ message: 'Please add required fields' });
-        return;
+    try {
+        const job = await Job.create({ ...req.body, postedBy: req.user.id });
+        const populated = await job.populate('postedBy', 'name company');
+        res.status(201).json(populated);
+    } catch (err) {
+        if (err.name === 'ValidationError') {
+            const msgs = Object.values(err.errors).map(e => e.message);
+            return res.status(400).json({ message: msgs.join(', ') });
+        }
+        res.status(500).json({ message: 'Server error' });
     }
-
-    const newJob = {
-        _id: 'job-' + Date.now(),
-        ...req.body,
-        postedBy: {
-            _id: req.user.id,
-            name: req.user.name,
-            company: req.body.company
-        },
-        createdAt: new Date(),
-    };
-
-    jobs.push(newJob);
-
-    res.status(201).json(newJob);
 };
 
 // @desc    Update job
 // @route   PUT /api/jobs/:id
-// @access  Private
+// @access  Private (Owner only)
 const updateJob = async (req, res) => {
-    const jobIndex = jobs.findIndex(j => j._id === req.params.id);
-
-    if (jobIndex === -1) {
-        res.status(404).json({ message: 'Job not found' });
-        return;
+    try {
+        const job = await Job.findById(req.params.id);
+        if (!job) return res.status(404).json({ message: 'Job not found' });
+        if (job.postedBy.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'Not authorised' });
+        }
+        Object.assign(job, req.body);
+        await job.save();
+        res.status(200).json(job);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
     }
-
-    const job = jobs[jobIndex];
-
-    // Check for user (simplified for dummy)
-    if (!req.user) {
-        res.status(401).json({ message: 'User not found' });
-        return;
-    }
-
-    // Update job
-    jobs[jobIndex] = { ...job, ...req.body };
-
-    res.status(200).json(jobs[jobIndex]);
 };
 
 // @desc    Delete job
 // @route   DELETE /api/jobs/:id
-// @access  Private
+// @access  Private (Owner only)
 const deleteJob = async (req, res) => {
-    const jobIndex = jobs.findIndex(j => j._id === req.params.id);
-
-    if (jobIndex === -1) {
-        res.status(404).json({ message: 'Job not found' });
-        return;
+    try {
+        const job = await Job.findById(req.params.id);
+        if (!job) return res.status(404).json({ message: 'Job not found' });
+        if (job.postedBy.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'Not authorised' });
+        }
+        await job.deleteOne();
+        res.status(200).json({ id: req.params.id });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
     }
-
-    const job = jobs[jobIndex];
-
-    // Check for user (simplified)
-    if (!req.user) {
-        res.status(401).json({ message: 'User not found' });
-        return;
-    }
-
-    // Remove job
-    jobs = jobs.filter(j => j._id !== req.params.id);
-
-    res.status(200).json({ id: req.params.id });
 };
 
-module.exports = {
-    getJobs,
-    getJob,
-    createJob,
-    updateJob,
-    deleteJob,
+// @desc    Get employer's own jobs
+// @route   GET /api/jobs/mine
+// @access  Private (Employer only)
+const getMyJobs = async (req, res) => {
+    try {
+        const jobs = await Job.find({ postedBy: req.user.id })
+            .sort('-createdAt')
+            .lean();
+        res.status(200).json(jobs);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+    }
 };
+
+module.exports = { getJobs, getJob, createJob, updateJob, deleteJob, getMyJobs };

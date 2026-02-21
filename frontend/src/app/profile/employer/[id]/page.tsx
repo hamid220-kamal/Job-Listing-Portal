@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import api from '@/utils/api';
+import { useAuth } from '@/context/AuthContext';
 import s from '../../../dashboard/profile.module.css';
 import Link from 'next/link';
+import Button from '@/components/Button';
 
 interface Profile {
     _id: string; name: string; email: string; phone: string;
@@ -20,9 +22,12 @@ interface Profile {
 export default function PublicEmployerProfile() {
     const params = useParams();
     const id = params?.id as string;
+    const { user } = useAuth();
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    const isOwnProfile = user && user._id === id;
 
     useEffect(() => {
         if (!id) return;
@@ -63,7 +68,7 @@ export default function PublicEmployerProfile() {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
 
                 {/* ── Hero ── */}
-                <div className={s.publicHero}>
+                <div className={s.publicHero} style={{ flexWrap: 'wrap' }}>
                     {profile.logo ? (
                         <img src={profile.logo} alt={profile.company} className={s.publicAvatar}
                             style={{ borderRadius: 'var(--radius)' }}
@@ -71,13 +76,28 @@ export default function PublicEmployerProfile() {
                     ) : (
                         <div className={s.publicAvatarFallback} style={{ borderRadius: 'var(--radius)' }}>🏢</div>
                     )}
-                    <div>
+                    <div style={{ flex: 1, minWidth: 200 }}>
                         <h1 className={s.publicName}>{profile.company || profile.name}</h1>
                         <p className={s.publicHeadline}>
                             {[profile.industry, profile.companySize ? `${profile.companySize} employees` : ''].filter(Boolean).join(' · ')}
                         </p>
                         {loc && <p className={s.publicLocation}>📍 {loc}</p>}
                     </div>
+                    {isOwnProfile && (
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            <Link href="/dashboard/employer">
+                                <Button variant="secondary" size="sm">📊 Dashboard</Button>
+                            </Link>
+                            <Link href="/dashboard/employer/profile">
+                                <Button variant="outline" size="sm">✏️ Edit Profile</Button>
+                            </Link>
+                            <Link href="/jobs/new">
+                                <Button size="sm" style={{ background: 'var(--gradient-primary)', border: 'none', boxShadow: 'var(--shadow-glow)' }}>
+                                    ➕ Post a Job
+                                </Button>
+                            </Link>
+                        </div>
+                    )}
                 </div>
 
                 {/* ── About ── */}

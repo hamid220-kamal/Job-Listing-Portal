@@ -1,90 +1,139 @@
 "use client";
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Check, SlidersHorizontal } from 'lucide-react';
+import { SlidersHorizontal, Check, RotateCcw } from 'lucide-react';
 
-export default function FilterSidebar() {
-    const [filters, setFilters] = useState({
-        fullTime: true,
-        partTime: false,
-        remote: false,
-        contract: false,
-        entryLevel: false,
-        senior: false
-    });
+interface FilterState {
+    types: string[];
+    location: string;
+}
 
-    const toggleFilter = (key: keyof typeof filters) => {
-        setFilters(prev => ({ ...prev, [key]: !prev[key] }));
+interface Props {
+    onFilterChange: (filters: FilterState) => void;
+}
+
+const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship', 'Freelance'];
+const LOCATIONS = ['Remote', 'On-site', 'Hybrid'];
+
+export default function FilterSidebar({ onFilterChange }: Props) {
+    const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+    const [selectedLocation, setSelectedLocation] = useState('');
+
+    const toggleType = (type: string) => {
+        const updated = selectedTypes.includes(type)
+            ? selectedTypes.filter(t => t !== type)
+            : [...selectedTypes, type];
+        setSelectedTypes(updated);
+        onFilterChange({ types: updated, location: selectedLocation });
     };
 
-    const sections = [
-        {
-            title: "Job Type",
-            options: [
-                { label: "Full-time", key: "fullTime" },
-                { label: "Part-time", key: "partTime" },
-                { label: "Contract", key: "contract" },
-                { label: "Freelance", key: "freelance" }
-            ]
-        },
-        {
-            title: "Remote Friendly",
-            options: [
-                { label: "Remote Only", key: "remote" },
-                { label: "Hybrid", key: "hybrid" },
-                { label: "On-site", key: "onsite" }
-            ]
-        },
-        {
-            title: "Experience Level",
-            options: [
-                { label: "Entry Level", key: "entryLevel" },
-                { label: "Mid Level", key: "midLevel" },
-                { label: "Senior", key: "senior" },
-                { label: "Director", key: "director" }
-            ]
-        },
-        {
-            title: "Salary Range",
-            options: [
-                { label: "$50k - $100k", key: "r1" },
-                { label: "$100k - $150k", key: "r2" },
-                { label: "$150k+", key: "r3" }
-            ]
-        }
-    ];
+    const selectLocation = (loc: string) => {
+        const updated = selectedLocation === loc ? '' : loc;
+        setSelectedLocation(updated);
+        onFilterChange({ types: selectedTypes, location: updated });
+    };
+
+    const clearAll = () => {
+        setSelectedTypes([]);
+        setSelectedLocation('');
+        onFilterChange({ types: [], location: '' });
+    };
+
+    const hasFilters = selectedTypes.length > 0 || selectedLocation;
+
+    const checkboxStyle = (active: boolean) => ({
+        width: '20px',
+        height: '20px',
+        borderRadius: '6px',
+        border: active ? '2px solid #2563eb' : '2px solid #d4d4d8',
+        display: 'flex' as const,
+        alignItems: 'center' as const,
+        justifyContent: 'center' as const,
+        background: active ? '#2563eb' : 'white',
+        transition: 'all 0.15s ease',
+        flexShrink: 0,
+    });
 
     return (
         <div style={{ background: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #e4e4e7' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem' }}>
-                <SlidersHorizontal size={20} />
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Filters</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <SlidersHorizontal size={20} />
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0 }}>Filters</h3>
+                </div>
+                {hasFilters && (
+                    <button
+                        onClick={clearAll}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '0.3rem',
+                            background: 'none', border: 'none', color: '#2563eb',
+                            fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer',
+                        }}
+                    >
+                        <RotateCcw size={14} /> Clear
+                    </button>
+                )}
             </div>
 
-            {sections.map((section, i) => (
-                <div key={i} style={{ marginBottom: '2rem' }}>
-                    <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#71717a', marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        {section.title}
-                    </h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        {section.options.map((opt, j) => (
-                            <label key={j} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', fontSize: '0.95rem', color: '#18181b' }}>
-                                <div style={{
-                                    width: '20px', height: '20px', borderRadius: '6px', border: '1px solid #d4d4d8',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    background: 'white'
-                                }}>
-                                    <input type="checkbox" style={{ display: 'none' }} />
-                                    <div style={{ width: '12px', height: '12px', borderRadius: '4px', background: '#18181b', opacity: 0 }} />
-                                    {/* Mock Interactivity */}
+            {/* Job Type */}
+            <div style={{ marginBottom: '2rem' }}>
+                <h4 style={{
+                    fontSize: '0.85rem', fontWeight: 700, color: '#71717a',
+                    marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em',
+                }}>
+                    Job Type
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {JOB_TYPES.map(type => {
+                        const active = selectedTypes.includes(type);
+                        return (
+                            <label
+                                key={type}
+                                onClick={() => toggleType(type)}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '0.75rem',
+                                    cursor: 'pointer', fontSize: '0.95rem', color: '#18181b',
+                                }}
+                            >
+                                <div style={checkboxStyle(active)}>
+                                    {active && <Check size={14} color="white" strokeWidth={3} />}
                                 </div>
-                                {opt.label}
+                                {type}
                             </label>
-                        ))}
-                    </div>
+                        );
+                    })}
                 </div>
-            ))}
+            </div>
+
+            {/* Work Location */}
+            <div style={{ marginBottom: '2rem' }}>
+                <h4 style={{
+                    fontSize: '0.85rem', fontWeight: 700, color: '#71717a',
+                    marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em',
+                }}>
+                    Work Location
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {LOCATIONS.map(loc => {
+                        const active = selectedLocation === loc;
+                        return (
+                            <label
+                                key={loc}
+                                onClick={() => selectLocation(loc)}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '0.75rem',
+                                    cursor: 'pointer', fontSize: '0.95rem', color: '#18181b',
+                                }}
+                            >
+                                <div style={checkboxStyle(active)}>
+                                    {active && <Check size={14} color="white" strokeWidth={3} />}
+                                </div>
+                                {loc}
+                            </label>
+                        );
+                    })}
+                </div>
+            </div>
         </div>
     );
 }

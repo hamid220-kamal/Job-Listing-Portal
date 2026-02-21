@@ -1,26 +1,64 @@
-﻿// @desc    Search jobs with filters
+﻿const Job = require('../jobs/job.model');
+
+// @desc    Search jobs with filters
 // @route   GET /api/search
 // @access  Public
 const searchJobs = async (req, res) => {
-    const { keyword, location, type, salary_min, salary_max } = req.query;
+    try {
+        const { keyword, location, type, sort, page = 1, limit = 20 } = req.query;
+        const query = {};
 
-    // Dummy logic to simulate search
-    // In a real implementation, this would build a MongoDB query:
-    // const query = {};
-    // if (keyword) query.$text = { $search: keyword };
-    // if (location) query.location = { $regex: location, $options: 'i' };
-    // if (type) query.jobType = type;
+        // Keyword search — matches title, company, or description
+        if (keyword && keyword.trim()) {
+            const regex = new RegExp(keyword.trim(), 'i');
+            query.$or = [
+                { title: regex },
+                { company: regex },
+                { description: regex },
+            ];
+        }
 
-    res.json({
-        message: 'Search Results',
-        filtersApplied: { keyword, location, type, salary_min, salary_max },
-        results: [
-            { _id: '1', title: 'Software Engineer', company: 'Tech Corp', location: 'Remote', matchScore: '98%' },
-            { _id: '2', title: 'Frontend Dev', company: 'Startup Inc', location: 'New York', matchScore: '85%' }
-        ]
-    });
+        // Location filter (case-insensitive partial match)
+        if (location && location.trim()) {
+            query.location = { $regex: location.trim(), $options: 'i' };
+        }
+
+        // Job type filter — can be comma-separated (e.g., "Full-time,Part-time")
+        if (type && type.trim()) {
+            const types = type.split(',').map(t => t.trim()).filter(Boolean);
+            if (types.length > 0) {
+                query.type = { $in: types };
+            }
+        }
+
+        // Sort options
+        let sortOption = { createdAt: -1 }; // default: newest
+        if (sort === 'oldest') sortOption = { createdAt: 1 };
+        if (sort === 'title') sortOption = { title: 1 };
+
+        // Pagination
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const [jobs, total] = await Promise.all([
+            Job.find(query)
+                .populate('postedBy', 'name company avatar')
+                .sort(sortOption)
+                .skip(skip)
+                .limit(parseInt(limit))
+                .lean(),
+            Job.countDocuments(query),
+        ]);
+
+        res.json({
+            jobs,
+            total,
+            page: parseInt(page),
+            pages: Math.ceil(total / parseInt(limit)),
+        });
+    } catch (err) {
+        console.error('searchJobs error:', err);
+        res.status(500).json({ message: 'Could not search jobs. Please try again.' });
+    }
 };
 
-module.exports = {
-    searchJobs
-};
+module.exports = { searchJobs };

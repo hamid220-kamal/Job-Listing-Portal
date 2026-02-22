@@ -7,12 +7,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Button from '@/components/Button';
 import Link from 'next/link';
 import api from '@/utils/api';
+import toast from 'react-hot-toast';
 
 /* ─── Types ─── */
 interface Job {
     _id: string; title: string; company: string;
     location: string; type: string; salary: string;
-    createdAt: string;
+    createdAt: string; status: 'active' | 'closed' | 'draft';
 }
 
 interface Applicant {
@@ -89,14 +90,30 @@ export default function EmployerDashboard() {
         return () => { cancelled = true; };
     }, [selectedJobId]);
 
+    // Toggle Job Status
+    const toggleJobStatus = async (jobId: string, currentStatus: string) => {
+        const newStatus = currentStatus === 'active' ? 'closed' : 'active';
+        setUpdatingId(jobId);
+        try {
+            await api.patch(`/jobs/${jobId}`, { status: newStatus });
+            setJobs(prev => prev.map(j => j._id === jobId ? { ...j, status: newStatus as any } : j));
+            toast.success(`Job marked as ${newStatus}`);
+        } catch (err) {
+            toast.error('Failed to update job status');
+        } finally {
+            setUpdatingId(null);
+        }
+    };
+
     // Update application status
     const updateStatus = async (appId: string, status: string) => {
         setUpdatingId(appId);
         try {
             const { data } = await api.patch(`/applications/${appId}/status`, { status });
             setApplicants(prev => prev.map(a => a._id === appId ? { ...a, status: data.status } : a));
+            toast.success(`Application ${status}`);
         } catch (err) {
-            console.error('Status update failed:', err);
+            toast.error('Status update failed');
         } finally {
             setUpdatingId(null);
         }
@@ -200,22 +217,46 @@ export default function EmployerDashboard() {
                             </div>
                         ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                {jobs.map(job => (
-                                    <button key={job._id} onClick={() => setSelectedJobId(job._id)}
+                                <div key={job._id} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <button onClick={() => setSelectedJobId(job._id)}
                                         style={{
-                                            padding: '0.75rem 1rem', borderRadius: 'var(--radius)',
+                                            width: '100%', padding: '0.75rem 1rem', borderRadius: 'var(--radius)',
                                             border: selectedJobId === job._id ? '2px solid var(--foreground)' : '1px solid var(--border)',
                                             background: selectedJobId === job._id ? 'var(--secondary)' : 'var(--surface)',
                                             cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit',
                                             transition: 'all 0.15s',
                                         }}
                                     >
-                                        <p style={{ fontWeight: 600, fontSize: '0.85rem', marginBottom: 2 }}>{job.title}</p>
-                                        <p style={{ fontSize: '0.72rem', color: 'var(--muted-foreground)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <p style={{ fontWeight: 600, fontSize: '0.85rem' }}>{job.title}</p>
+                                            <span style={{
+                                                fontSize: '0.6rem', padding: '1px 6px', borderRadius: '4px',
+                                                background: job.status === 'active' ? '#d1fae5' : '#f4f4f5',
+                                                color: job.status === 'active' ? '#065f46' : '#71717a',
+                                                fontWeight: 700, textTransform: 'uppercase'
+                                            }}>{job.status}</span>
+                                        </div>
+                                        <p style={{ fontSize: '0.72rem', color: 'var(--muted-foreground)', marginTop: 2 }}>
                                             {job.location} · {new Date(job.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                         </p>
                                     </button>
-                                ))}
+                                    {selectedJobId === job._id && (
+                                        <div style={{ display: 'flex', gap: '4px', padding: '0 4px' }}>
+                                            <button
+                                                onClick={() => toggleJobStatus(job._id, job.status)}
+                                                disabled={updatingId === job._id}
+                                                style={{
+                                                    flex: 1, fontSize: '0.65rem', padding: '4px', borderRadius: '4px',
+                                                    border: '1px solid var(--border)', background: 'var(--surface)',
+                                                    cursor: 'pointer', color: job.status === 'active' ? '#ef4444' : '#10b981',
+                                                    fontWeight: 600
+                                                }}
+                                            >
+                                                {job.status === 'active' ? '🚫 Close Job' : '✅ Reopen'}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </section>

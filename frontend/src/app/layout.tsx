@@ -8,6 +8,7 @@ import BottomNav from '@/components/BottomNav';
 import ScrollProgress from '@/components/ScrollProgress';
 import CustomCursor from '@/components/CustomCursor';
 import { AuthProvider } from '@/context/AuthContext';
+import { Toaster } from 'react-hot-toast';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -31,6 +32,20 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className} style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <AuthProvider>
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              className: 'glass-morphism',
+              style: {
+                background: 'rgba(255, 255, 255, 0.8)',
+                color: '#333',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                borderRadius: '12px',
+                padding: '16px',
+              },
+            }}
+          />
           <ScrollProgress />
           <CustomCursor />
           <Navbar />

@@ -11,8 +11,8 @@ const getJobs = async (req, res) => {
         const limit = parseInt(req.query.limit) || 20;
         const skip = (page - 1) * limit;
 
-        const total = await Job.countDocuments();
-        const jobs = await Job.find()
+        const total = await Job.countDocuments({ status: 'active' });
+        const jobs = await Job.find({ status: 'active' })
             .populate('postedBy', 'name company')
             .sort('-createdAt')
             .skip(skip)

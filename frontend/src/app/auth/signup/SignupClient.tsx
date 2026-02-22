@@ -8,6 +8,8 @@ import Input from '@/components/Input';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+import toast from 'react-hot-toast';
+
 export default function SignupPageClient() {
     const router = useRouter();
     const { signup } = useAuth();
@@ -22,6 +24,7 @@ export default function SignupPageClient() {
 
         try {
             await signup(formData.name, formData.email, formData.password, formData.role);
+            toast.success('Account created successfully!');
             const userData = localStorage.getItem('user');
             const user = userData ? JSON.parse(userData) : null;
             if (formData.role === 'employer') {
@@ -30,6 +33,7 @@ export default function SignupPageClient() {
                 router.push(user?._id ? `/profile/candidate/${user._id}` : '/jobs');
             }
         } catch (err: any) {
+            toast.error(err.response?.data?.message || err.message || 'Something went wrong');
             setError(err.response?.data?.message || err.message || 'Something went wrong');
         } finally {
             setLoading(false);

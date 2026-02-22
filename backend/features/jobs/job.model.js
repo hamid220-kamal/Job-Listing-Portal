@@ -42,6 +42,11 @@ const jobSchema = new mongoose.Schema({
         default: [],
         required: [true, 'Please add responsibilities']
     },
+    status: {
+        type: String,
+        enum: ['active', 'closed', 'draft'],
+        default: 'active'
+    },
     postedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -52,5 +57,12 @@ const jobSchema = new mongoose.Schema({
         default: Date.now
     }
 });
+
+// Add text index for keyword search
+jobSchema.index({ title: 'text', company: 'text', description: 'text' });
+
+// Add indexes for frequent filters
+jobSchema.index({ location: 1 });
+jobSchema.index({ type: 1 });
 
 module.exports = mongoose.model('Job', jobSchema);

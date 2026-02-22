@@ -204,7 +204,7 @@ export default function CandidateProfile() {
         } catch (err: any) {
             const serverMsg = err.response?.data?.message || '';
             if (serverMsg.includes('file type')) {
-                setMsg({ ok: false, text: 'Please upload a PDF, DOC, or DOCX file.' });
+                setMsg({ ok: false, text: 'Please upload a PDF file.' });
             } else {
                 setMsg({ ok: false, text: 'Could not upload resume. Please try again.' });
             }
@@ -513,10 +513,10 @@ export default function CandidateProfile() {
                                         </div>
                                         <div className={s.uploadedFileInfo}>
                                             <div className={s.uploadedFileName}>{form.resumeFileName || 'Resume'}</div>
-                                            <a href={form.resume} target="_blank" rel="noopener" className={s.uploadedFileMeta}
+                                            <Link href={`/resume-viewer/${user?._id}`} className={s.uploadedFileMeta}
                                                 style={{ color: 'var(--accent)', textDecoration: 'none' }}>
                                                 View file ↗
-                                            </a>
+                                            </Link>
                                         </div>
                                         <button type="button" style={{
                                             background: 'none', border: 'none', cursor: 'pointer',
@@ -532,10 +532,10 @@ export default function CandidateProfile() {
                                         <div className={s.uploadText}>
                                             <span className={s.uploadTextAccent}>Click to upload</span> your resume
                                         </div>
-                                        <div className={s.hint}>PDF, DOC, DOCX — max 5 MB</div>
+                                        <div className={s.hint}>PDF only — max 5 MB</div>
                                     </div>
                                 )}
-                                <input ref={resumeRef} type="file" accept=".pdf,.doc,.docx" hidden
+                                <input ref={resumeRef} type="file" accept=".pdf,application/pdf" hidden
                                     onChange={handleResumeUpload} />
                                 {uploadingResume && <p className={s.hint} style={{ marginTop: 8 }}>Uploading…</p>}
                             </div>

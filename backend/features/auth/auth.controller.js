@@ -236,7 +236,7 @@ const validateToken = asyncHandler(async (req, res) => {
     }
 });
 
-// @desc    Refresh access token
+// @desc    Refresh access token (with Rotation)
 // @route   POST /api/auth/refresh
 // @access  Public (Uses Cookie)
 const refreshToken = asyncHandler(async (req, res) => {
@@ -245,21 +245,52 @@ const refreshToken = asyncHandler(async (req, res) => {
         return res.status(401).json({ message: 'No refresh token provided' });
     }
 
-    const token = cookies.refreshToken;
+    const oldToken = cookies.refreshToken;
+
+    // Clear the old refresh token cookie immediately
+    res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    });
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(oldToken, process.env.JWT_SECRET);
         const user = await User.findById(decoded.id).select('_id name email role');
 
         if (!user) {
             return res.status(401).json({ message: 'User not found' });
         }
 
+        // Generate NEW tokens (Rotation)
         const accessToken = generateToken(user._id);
+        const newRefreshToken = generateRefreshToken(user._id);
+
+        // Set the NEW refresh token cookie
+        res.cookie('refreshToken', newRefreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            maxAge: 30 * 24 * 60 * 60 * 1000
+        });
+
         res.json({ token: accessToken, user });
     } catch (error) {
-        res.status(401).json({ message: 'Invalid refresh token' });
+        // Token might be expired or tampered with
+        res.status(401).json({ message: 'Invalid or expired refresh token' });
     }
+});
+
+// @desc    Logout user
+// @route   POST /api/auth/logout
+// @access  Public
+const logoutUser = asyncHandler(async (req, res) => {
+    res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    });
+    res.status(200).json({ message: 'Logged out successfully' });
 });
 
 module.exports = {
@@ -268,4 +299,5 @@ module.exports = {
     getMe,
     validateToken,
     refreshToken,
+    logoutUser,
 };

@@ -21,7 +21,7 @@ router.route('/')
 router.get('/completeness', protect, getCompleteness);
 
 router.post('/upload-avatar', protect, upload.single('avatar'), uploadAvatar);
-router.post('/upload-resume', protect, upload.single('resume'), uploadResume);
+router.post('/upload-resume', protect, resumeUpload.single('resume'), uploadResume);
 router.post('/upload-logo', protect, upload.single('logo'), uploadLogo);
 
 // Public route — must come last (catches :id param)

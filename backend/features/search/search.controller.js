@@ -6,16 +6,11 @@
 const searchJobs = async (req, res) => {
     try {
         const { keyword, location, type, sort, page = 1, limit = 20 } = req.query;
-        const query = {};
+        const query = { status: 'active' };
 
-        // Keyword search — matches title, company, or description
+        // Keyword search — matches title, company, or description using Text Index
         if (keyword && keyword.trim()) {
-            const regex = new RegExp(keyword.trim(), 'i');
-            query.$or = [
-                { title: regex },
-                { company: regex },
-                { description: regex },
-            ];
+            query.$text = { $search: keyword.trim() };
         }
 
         // Location filter (case-insensitive partial match)

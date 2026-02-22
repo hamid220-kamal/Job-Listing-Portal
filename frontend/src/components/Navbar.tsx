@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { motion, useScroll, useMotionValueEvent, useMotionTemplate, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import Button from './Button';
 import { Search, Bell, Menu } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const navLinks = [
     { name: 'Home', href: '/' },
@@ -229,7 +230,13 @@ export default function Navbar() {
                                             My Profile
                                         </MagneticButton>
                                     </Link>
-                                    <MagneticButton onClick={logout} style={{ fontSize: '0.95rem', padding: '0.75rem 1.75rem', background: '#DC2626', color: '#ffffff', fontWeight: 700, borderRadius: '99px', border: 'none', cursor: 'pointer', boxShadow: '0 0 20px rgba(220, 38, 38, 0.2)' }}>
+                                    <MagneticButton
+                                        onClick={async () => {
+                                            await logout();
+                                            toast.success('Logged out successfully');
+                                        }}
+                                        style={{ fontSize: '0.95rem', padding: '0.75rem 1.75rem', background: '#DC2626', color: '#ffffff', fontWeight: 700, borderRadius: '99px', border: 'none', cursor: 'pointer', boxShadow: '0 0 20px rgba(220, 38, 38, 0.2)' }}
+                                    >
                                         Logout
                                     </MagneticButton>
                                 </>

@@ -9,6 +9,8 @@ import Modal from '@/components/Modal';
 import { CheckCircle } from 'lucide-react';
 import api from '@/utils/api';
 
+import toast from 'react-hot-toast';
+
 interface Job {
     _id: string;
     title: string;
@@ -36,8 +38,9 @@ export default function JobDetailsClient() {
         try {
             await api.post(`/applications/${job?._id}`, applicationData);
             setSuccess(true);
+            toast.success('Application submitted successfully!');
         } catch (error: any) {
-            alert(error.response?.data?.message || 'Error applying for job');
+            toast.error(error.response?.data?.message || 'Error applying for job');
         } finally {
             setSubmitting(false);
         }

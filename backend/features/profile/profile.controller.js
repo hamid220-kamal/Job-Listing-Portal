@@ -143,7 +143,7 @@ const uploadAvatar = asyncHandler(async (req, res) => {
         await deleteFromCloudinary(user.avatarPublicId);
     }
 
-    const result = await uploadToCloudinary(req.file.buffer, 'avatars', 'image');
+    const result = await uploadToCloudinary(req.file.buffer, 'avatars', 'image', '', req.file.mimetype);
 
     // Use findByIdAndUpdate to avoid full-document validation
     await User.findByIdAndUpdate(req.user._id, {
@@ -154,7 +154,10 @@ const uploadAvatar = asyncHandler(async (req, res) => {
     res.json({ avatar: result.url, message: 'Profile photo uploaded!' });
 });
 
-// ─── POST /api/profile/upload-resume — upload resume ─────────
+const fs = require('fs');
+const path = require('path');
+
+// ─── POST /api/profile/upload-resume — upload resume (LOCAL) ─
 
 const uploadResume = asyncHandler(async (req, res) => {
     if (!req.file) {
@@ -168,23 +171,35 @@ const uploadResume = asyncHandler(async (req, res) => {
         throw new Error('Only candidates can upload resumes');
     }
 
-    // Delete old resume if exists
-    if (user.resumePublicId) {
-        await deleteFromCloudinary(user.resumePublicId, 'raw');
+    // Delete old resume if it exists locally
+    if (user.resume && user.resume.startsWith('/uploads/')) {
+        const oldPath = path.join(__dirname, '../../..', user.resume);
+        if (fs.existsSync(oldPath)) {
+            try {
+                fs.unlinkSync(oldPath);
+            } catch (err) {
+                console.error('Local delete error:', err.message);
+            }
+        }
+    } else if (user.resumePublicId) {
+        // Fallback for old Cloudinary files
+        await deleteFromCloudinary(user.resumePublicId, user.resumeResourceType || 'raw');
     }
 
-    const result = await uploadToCloudinary(req.file.buffer, 'resumes', 'raw');
+    // Construct local URL path
+    const fileUrl = `/uploads/resumes/${req.file.filename}`;
 
     await User.findByIdAndUpdate(req.user._id, {
-        resume: result.url,
-        resumePublicId: result.publicId,
+        resume: fileUrl,
+        resumePublicId: '', // Clear cloudinary ID
+        resumeResourceType: 'local',
         resumeFileName: req.file.originalname,
     });
 
     res.json({
-        resume: result.url,
+        resume: fileUrl,
         resumeFileName: req.file.originalname,
-        message: 'Resume uploaded!',
+        message: 'Resume uploaded locally!',
     });
 });
 
@@ -206,7 +221,7 @@ const uploadLogo = asyncHandler(async (req, res) => {
         await deleteFromCloudinary(user.logoPublicId);
     }
 
-    const result = await uploadToCloudinary(req.file.buffer, 'logos', 'image');
+    const result = await uploadToCloudinary(req.file.buffer, 'logos', 'image', '', req.file.mimetype);
 
     // Use findByIdAndUpdate to avoid full-document validation
     await User.findByIdAndUpdate(req.user._id, {

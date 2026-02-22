@@ -66,6 +66,7 @@ const userSchema = new mongoose.Schema({
     education: { type: [educationSchema], default: [] },
     resume: { type: String, default: '' },
     resumePublicId: { type: String, default: '' },
+    resumeResourceType: { type: String, default: 'raw' },
     resumeFileName: { type: String, default: '' },
     socialLinks: {
         linkedin: { type: String, default: '' },

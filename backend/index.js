@@ -5,7 +5,15 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const cookieParser = require('cookie-parser');
+const path = require('path');
+const fs = require('fs');
 const connectDB = require('./config/db');
+
+// Ensure upload directories exist
+const uploadDir = path.join(__dirname, 'uploads');
+const resumeDir = path.join(uploadDir, 'resumes');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+if (!fs.existsSync(resumeDir)) fs.mkdirSync(resumeDir);
 
 // Load environment variables
 dotenv.config();
@@ -75,6 +83,9 @@ app.use(express.json({ limit: '10mb' })); // Limit payload size
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 app.use(mongoSanitize()); // Prevent NoSQL injection attacks (strips $ and . from req.body/query/params)
 app.use(cookieParser()); // Cookie parser for HTTP-only cookies
+
+// Static folder for uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/auth', require('./features/auth/auth.routes'));

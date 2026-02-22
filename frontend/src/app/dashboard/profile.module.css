@@ -575,185 +575,180 @@
     background: #fff;
 }
 
-/* ─── Public Profile ─────────────────────────── */
-.publicContainer {
-    max-width: 780px;
+/* ─── Public Profile (Enhanced) ─────────────── */
+.publicGrid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 2rem;
+    align-items: start;
+    max-width: 1100px;
     margin: 0 auto;
-    padding: 3rem 1.5rem 4rem;
+    padding: 3rem 1.5rem 5rem;
 }
 
-.publicHero {
+.stickySide {
+    position: sticky;
+    top: 6rem;
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 1.5rem;
-    margin-bottom: 2rem;
+}
+
+/* Hero / Header Card */
+.profileCard {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
     padding: 1.5rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    background: var(--surface);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
 }
 
-.publicAvatar {
-    width: 88px;
-    height: 88px;
-    border-radius: 50%;
+.premiumHero {
+    position: relative;
+    padding: 2rem;
+    background: var(--gradient-primary);
+    color: white;
+    border-radius: var(--radius-lg);
+    margin-bottom: 2rem;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    gap: 2rem;
+}
+
+.premiumHero::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.2), transparent);
+    pointer-events: none;
+}
+
+/* Avatar Glass Effect */
+.glassAvatar {
+    width: 120px;
+    height: 120px;
+    border-radius: var(--radius-lg);
     object-fit: cover;
-    border: 3px solid var(--border);
+    border: 4px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     flex-shrink: 0;
 }
 
-.publicAvatarFallback {
-    width: 88px;
-    height: 88px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-size: 2rem;
-    font-weight: 700;
-    flex-shrink: 0;
+.sidebarInfo {
+    text-align: center;
 }
 
-.publicName {
-    font-size: 1.5rem;
-    font-weight: 800;
-    letter-spacing: -0.02em;
+/* Summary Grid */
+.summaryGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
 }
 
-.publicHeadline {
-    color: var(--muted-foreground);
-    font-size: 0.9rem;
-    margin-top: 0.15rem;
-}
-
-.publicLocation {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.8rem;
-    color: var(--muted-foreground);
-    margin-top: 0.35rem;
-}
-
-.publicSection {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 1.25rem;
-    background: var(--surface);
-}
-
-.publicSectionTitle {
-    font-size: 1rem;
-    font-weight: 700;
-    margin-bottom: 0.75rem;
-}
-
-.publicSkills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-}
-
-.publicSkillTag {
-    padding: 0.25rem 0.75rem;
-    border-radius: var(--radius-full);
+.statBadge {
+    padding: 0.75rem;
     background: var(--secondary);
-    font-size: 0.8rem;
-    font-weight: 500;
-    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-align: center;
 }
 
-.timelineEntry {
-    padding: 0.75rem 0;
-    border-bottom: 1px solid var(--border);
+.statValue {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 800;
 }
 
-.timelineEntry:last-child {
-    border-bottom: none;
-}
-
-.timelineTitle {
-    font-weight: 600;
-    font-size: 0.9rem;
-}
-
-.timelineSubtitle {
-    font-size: 0.8rem;
+.statLabel {
+    font-size: 0.7rem;
+    text-transform: uppercase;
     color: var(--muted-foreground);
-    margin-top: 0.1rem;
+    letter-spacing: 0.05em;
 }
 
-.timelineDesc {
-    font-size: 0.8rem;
-    color: var(--foreground);
-    margin-top: 0.35rem;
-    line-height: 1.5;
+/* Timeline 2.0 */
+.modernTimeline {
+    position: relative;
+    padding-left: 1.5rem;
+    border-left: 2px solid var(--border);
+    margin-left: 0.5rem;
 }
 
-.publicSocials {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
+.timelineNode {
+    position: relative;
+    margin-bottom: 2.5rem;
 }
 
-.publicSocialLink {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.4rem 0.8rem;
-    border-radius: var(--radius-full);
-    border: 1px solid var(--border);
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--foreground);
-    text-decoration: none;
-    transition: all 0.2s;
+.timelineNode::before {
+    content: '';
+    position: absolute;
+    left: -1.5rem;
+    top: 0.25rem;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background: var(--background);
+    border: 2px solid var(--accent);
+    transform: translateX(-50%);
+}
+
+.timelineCard {
     background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1.25rem;
+    border-radius: var(--radius);
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.publicSocialLink:hover {
+.timelineCard:hover {
+    transform: translateX(4px);
     border-color: var(--accent);
-    color: var(--accent);
-    background: rgba(37, 99, 235, 0.04);
+    box-shadow: var(--shadow-md);
 }
 
-/* ─── Checkbox toggle ────────────────────────── */
-.checkRow {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.8rem;
-    cursor: pointer;
+/* Categorized Skills */
+.skillCategory {
+    margin-bottom: 1.5rem;
+}
+
+.categoryTitle {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
     color: var(--muted-foreground);
+    margin-bottom: 0.5rem;
+    display: block;
 }
 
-.checkRow input[type="checkbox"] {
-    accent-color: var(--accent);
+/* Live Jobs List */
+.liveJobCard {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    margin-bottom: 0.75rem;
+    transition: background 0.2s;
 }
 
-/* ─── Responsive ─────────────────────────────── */
-@media (max-width: 640px) {
-    .header {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
+.liveJobCard:hover {
+    background: var(--secondary);
+}
 
-    .formRow,
-    .formRowThree,
-    .socialRow {
+/* Responsive Overrides */
+@media (max-width: 900px) {
+    .publicGrid {
         grid-template-columns: 1fr;
     }
 
-    .headerActions {
-        justify-content: center;
-    }
-
-    .publicHero {
-        flex-direction: column;
-        text-align: center;
+    .stickySide {
+        position: static;
     }
 }

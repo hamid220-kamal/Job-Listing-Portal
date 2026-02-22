@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import api from '@/utils/api';
 import { useAuth } from '@/context/AuthContext';
@@ -21,33 +20,26 @@ interface Profile {
     createdAt: string;
 }
 
-export default function PublicCandidateProfile() {
-    const params = useParams();
-    const id = params?.id as string;
+export default function CandidateProfileClient({ profile: initialProfile, id }: { profile: Profile | null, id: string }) {
     const { user } = useAuth();
-    const [profile, setProfile] = useState<Profile | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const [profile, setProfile] = useState<Profile | null>(initialProfile);
+    const [loading, setLoading] = useState(!initialProfile);
 
     const isOwnProfile = user && user._id === id;
 
     useEffect(() => {
-        if (!id) return;
+        if (initialProfile) return;
         (async () => {
             try {
                 const { data } = await api.get(`/profile/${id}`);
-                if (data.role !== 'candidate') {
-                    setError('This is not a candidate profile.');
-                    return;
-                }
                 setProfile(data);
-            } catch {
-                setError('Profile not found.');
+            } catch (err) {
+                console.error(err);
             } finally {
                 setLoading(false);
             }
         })();
-    }, [id]);
+    }, [id, initialProfile]);
 
     if (loading) return (
         <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -55,16 +47,20 @@ export default function PublicCandidateProfile() {
         </div>
     );
 
-    if (error || !profile) return (
+    if (!profile) return (
         <div style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem' }}>
             <h1 style={{ fontSize: '2rem', fontWeight: 800 }}>404</h1>
-            <p style={{ color: 'var(--muted-foreground)' }}>{error || 'Profile not found'}</p>
+            <p style={{ color: 'var(--muted-foreground)' }}>Profile not found</p>
             <Link href="/"><Button variant="outline">Back to Home</Button></Link>
         </div>
     );
 
     const loc = [profile.location?.city, profile.location?.country].filter(Boolean).join(', ');
     const initials = profile.name ? profile.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?';
+
+    // Skill Categorization
+    const coreSkills = profile.skills?.slice(0, 4) || [];
+    const otherSkills = profile.skills?.slice(4) || [];
 
     return (
         <div className={s.publicGrid}>
@@ -95,11 +91,11 @@ export default function PublicCandidateProfile() {
                                 <Button style={{ width: '100%', background: 'var(--gradient-primary)', border: 'none' }}>Connect</Button>
                             )}
                             {profile.resume && (
-                                <a href={profile.resume} target="_blank" rel="noopener noreferrer">
+                                <Link href={`/resume-viewer/${profile._id}`}>
                                     <Button variant="secondary" style={{ width: '100%', gap: '0.5rem' }}>
                                         <FileText size={16} /> Resume
                                     </Button>
-                                </a>
+                                </Link>
                             )}
                         </div>
                     </div>
@@ -158,14 +154,31 @@ export default function PublicCandidateProfile() {
                     {/* Skills Section */}
                     {profile.skills?.length > 0 && (
                         <section className={s.profileCard} style={{ marginBottom: '2rem' }}>
-                            <h2 className={s.publicSectionTitle} style={{ marginBottom: '1.5rem' }}>Core Skills</h2>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                {profile.skills.map((sk, i) => (
-                                    <span key={i} className={s.statBadge} style={{ fontWeight: 600, fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
-                                        {sk}
-                                    </span>
-                                ))}
+                            <h2 className={s.publicSectionTitle} style={{ marginBottom: '1.5rem' }}>Skills & Expertise</h2>
+
+                            <div className={s.skillCategory}>
+                                <span className={s.categoryTitle}>Core Competencies</span>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                    {coreSkills.map((sk, i) => (
+                                        <span key={i} className={s.statBadge} style={{ fontWeight: 700, fontSize: '0.85rem', padding: '0.6rem 1.2rem', background: 'var(--primary)', color: 'white' }}>
+                                            {sk}
+                                        </span>
+                                    ))}
+                                </div>
                             </div>
+
+                            {otherSkills.length > 0 && (
+                                <div className={s.skillCategory}>
+                                    <span className={s.categoryTitle}>Other Skills</span>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                        {otherSkills.map((sk, i) => (
+                                            <span key={i} className={s.statBadge} style={{ fontWeight: 500, fontSize: '0.85rem', padding: '0.5rem 1rem' }}>
+                                                {sk}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </section>
                     )}
 
@@ -195,4 +208,3 @@ export default function PublicCandidateProfile() {
         </div>
     );
 }
-

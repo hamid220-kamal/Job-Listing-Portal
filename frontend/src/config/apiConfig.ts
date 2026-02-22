@@ -4,13 +4,20 @@
  * such as in a fresh collaborator environment.
  */
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://job-listing-portal-ten-omega.vercel.app/api';
+// Fallback URLs (change these if you have a primary production domain)
+const FALLBACK_API = 'https://job-listing-portal-ten-omega.vercel.app/api';
+const FALLBACK_SITE = 'https://job-listing-portal-ten-omega.vercel.app';
+
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || FALLBACK_API;
 
 // The root URL of the backend server (for static files/uploads)
 export const BACKEND_URL = API_URL.replace('/api', '');
 
 // The root URL of the frontend website
-export const SITE_URL = 'https://job-listing-portal-ten-omega.vercel.app';
+// Dynamically determine the site URL in the browser, otherwise use fallback
+export const SITE_URL = typeof window !== 'undefined'
+    ? window.location.origin
+    : (process.env.NEXT_PUBLIC_SITE_URL || FALLBACK_SITE);
 
 export default {
     API_URL,

@@ -8,6 +8,7 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 const connectDB = require('./config/db');
+const mongoose = require('mongoose');
 
 // Ensure upload directories exist (handled gracefully for serverless environments)
 try {
@@ -92,6 +93,37 @@ app.use(express.json({ limit: '10mb' })); // Limit payload size
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 app.use(mongoSanitize()); // Prevent NoSQL injection attacks (strips $ and . from req.body/query/params)
 app.use(cookieParser()); // Cookie parser for HTTP-only cookies
+
+// Database Connection Middleware - Ensures DB is ready before any route is processed
+// This is critical when 'bufferCommands: false' is used to prevent race conditions
+app.use(async (req, res, next) => {
+    // If connection is already established (1), continue
+    if (mongoose.connection.readyState === 1) {
+        return next();
+    }
+
+    // If connection is disconnected (0) or erroring, try to reconnect
+    if (mongoose.connection.readyState === 0 || mongoose.connection.readyState === 3) {
+        console.log('🔄 Database disconnected. Attempting to reconnect...');
+        await connectDB();
+    }
+
+    // Wait for the connection to reach state 1 (connected)
+    // We poll briefly to avoid infinite loops if the connection is taking time
+    let attempts = 0;
+    while (mongoose.connection.readyState !== 1 && attempts < 10) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        attempts++;
+    }
+
+    if (mongoose.connection.readyState === 1) {
+        next();
+    } else {
+        res.status(503).json({
+            message: 'Database connection is still pending. Please refresh in a moment.'
+        });
+    }
+});
 
 // Static folder for uploads
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

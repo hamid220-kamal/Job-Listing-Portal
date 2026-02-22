@@ -3,7 +3,10 @@ const mongoose = require('mongoose');
 const connectDB = async () => {
     // Connection options
     const options = {
-        serverSelectionTimeoutMS: 5000, // 5 second timeout for quick fallback
+        serverSelectionTimeoutMS: 5000,
+        connectTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        bufferCommands: false, // Disable buffering to fail fast if not connected
     };
 
     const cloudURI = process.env.MONGO_URI;

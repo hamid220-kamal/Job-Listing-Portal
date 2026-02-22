@@ -4,7 +4,7 @@ const User = require('../features/auth/user.model');
 const axios = require('axios');
 
 // Deployed Backend URL for Remote Verification
-const AUTH_SERVER_URL = 'https://job-listing-portal-psi-nine.vercel.app/api/auth/validate-token';
+const AUTH_SERVER_URL = 'https://job-listing-portal-ten-omega.vercel.app/api/auth/validate-token';
 
 const protect = asyncHandler(async (req, res, next) => {
     const authHeader = req.headers.authorization;

@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Job = require('./job.model');
 
 // --- REMOVED: let jobs = [...] array has been deleted ---

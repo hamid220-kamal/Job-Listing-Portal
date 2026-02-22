@@ -46,23 +46,33 @@ const connectDB = async () => {
     if (forceCloud) {
         if (!cloudURI) {
             console.error('❌ Cannot force Cloud: MONGO_URI is not defined in .env');
-            process.exit(1);
+            if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) process.exit(1);
+            return;
         }
         await connectToCloud(true);
     } else if (forceLocal) {
         await connectToLocal(true);
     } else {
         // Default Behavior: 
-        // 1. If MONGO_URI exists, Try Cloud -> Fallback to Local
-        // 2. If NO MONGO_URI (Colleague's machine), Default to Local immediately
+        // 1. If MONGO_URI exists, Try Cloud -> Fallback to Local (only in dev)
+        // 2. If NO MONGO_URI, Default to Local immediately (only in dev)
+
         if (cloudURI) {
             try {
                 await connectToCloud();
             } catch (error) {
+                if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+                    console.error('🛑 Cloud connection failed in production. Not falling back to local.');
+                    return;
+                }
                 console.log('⚠️  Checking network or IP Whitelist issues...');
                 await connectToLocal();
             }
         } else {
+            if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+                console.error('❌ MONGO_URI is missing in production environment');
+                return;
+            }
             console.log('ℹ️  No MONGO_URI found in .env');
             console.log('ℹ️  Running in "Isolated Development Mode"');
             await connectToLocal();

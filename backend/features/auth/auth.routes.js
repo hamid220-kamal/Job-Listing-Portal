@@ -5,11 +5,16 @@ const {
     loginUser,
     getMe,
     validateToken,
+    refreshToken,
+    logoutUser,
 } = require('./auth.controller');
 const { protect } = require('../../middleware/authMiddleware');
+const { authLimiter } = require('../../middleware/rateLimitMiddleware');
 
-router.post('/signup', registerUser);
-router.post('/login', loginUser);
+router.post('/signup', authLimiter, registerUser);
+router.post('/login', authLimiter, loginUser);
+router.post('/logout', logoutUser);
+router.post('/refresh', refreshToken);
 router.post('/validate-token', validateToken);
 router.get('/me', protect, getMe);
 

@@ -4,7 +4,7 @@ const User = require('./user.model');
 const asyncHandler = require('express-async-handler');
 
 // Deployed Backend URL for Remote Auth Proxy
-const AUTH_SERVER_URL = 'https://job-listing-portal-psi-nine.vercel.app/api/auth';
+const AUTH_SERVER_URL = 'https://job-listing-portal-ten-omega.vercel.app/api/auth';
 
 // Password strength validation
 const validatePassword = (password) => {
@@ -41,12 +41,14 @@ const generateToken = (id) => {
     });
 };
 
-// Generate Refresh Token
+// Generate Refresh Token — 30 day lifespan for persistent sessions
 const generateRefreshToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
         expiresIn: '30d',
     });
 };
+
+
 
 // @desc    Register new user
 // @route   POST /api/auth/signup
@@ -116,11 +118,11 @@ const registerUser = asyncHandler(async (req, res) => {
         const token = generateToken(user._id);
         const refreshToken = generateRefreshToken(user._id);
 
-        // Set HTTP-only cookie
+        // Set HTTP-only cookie for refresh token
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-            sameSite: 'strict',
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for cross-domain production
             maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
         });
 
@@ -171,11 +173,11 @@ const loginUser = asyncHandler(async (req, res) => {
         const token = generateToken(user._id);
         const refreshToken = generateRefreshToken(user._id);
 
-        // Set HTTP-only cookie
+        // Set HTTP-only cookie for refresh token
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
             maxAge: 30 * 24 * 60 * 60 * 1000
         });
 
@@ -234,9 +236,68 @@ const validateToken = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Refresh access token (with Rotation)
+// @route   POST /api/auth/refresh
+// @access  Public (Uses Cookie)
+const refreshToken = asyncHandler(async (req, res) => {
+    const cookies = req.cookies;
+    if (!cookies?.refreshToken) {
+        return res.status(401).json({ message: 'No refresh token provided' });
+    }
+
+    const oldToken = cookies.refreshToken;
+
+    // Clear the old refresh token cookie immediately
+    res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    });
+
+    try {
+        const decoded = jwt.verify(oldToken, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id).select('_id name email role');
+
+        if (!user) {
+            return res.status(401).json({ message: 'User not found' });
+        }
+
+        // Generate NEW tokens (Rotation)
+        const accessToken = generateToken(user._id);
+        const newRefreshToken = generateRefreshToken(user._id);
+
+        // Set the NEW refresh token cookie
+        res.cookie('refreshToken', newRefreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            maxAge: 30 * 24 * 60 * 60 * 1000
+        });
+
+        res.json({ token: accessToken, user });
+    } catch (error) {
+        // Token might be expired or tampered with
+        res.status(401).json({ message: 'Invalid or expired refresh token' });
+    }
+});
+
+// @desc    Logout user
+// @route   POST /api/auth/logout
+// @access  Public
+const logoutUser = asyncHandler(async (req, res) => {
+    res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    });
+    res.status(200).json({ message: 'Logged out successfully' });
+});
+
 module.exports = {
     registerUser,
     loginUser,
     getMe,
     validateToken,
+    refreshToken,
+    logoutUser,
 };

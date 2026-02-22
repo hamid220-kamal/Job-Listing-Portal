@@ -1,31 +1,12 @@
-"use client";
+import { Metadata } from 'next';
+import CompaniesPageClient from './CompaniesClient';
 
-import MotionWrapper from '@/components/MotionWrapper';
-import { Building2 } from 'lucide-react';
+export const metadata: Metadata = {
+    title: 'Top Companies | Job Listing Portal',
+    description: 'Explore world-class companies hiring right now. View company profiles, culture, benefits, and open positions at leading organizations.',
+    keywords: ['top companies', 'best places to work', 'company reviews', 'tech companies hiring', 'remote companies'],
+};
 
 export default function CompaniesPage() {
-    return (
-        <div className="container" style={{ padding: '6rem 1.5rem', textAlign: 'center', minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <MotionWrapper>
-                <div style={{
-                    width: '80px',
-                    height: '80px',
-                    borderRadius: '50%',
-                    background: 'var(--muted)',
-                    color: 'var(--muted-foreground)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 1.5rem'
-                }}>
-                    <Building2 size={40} />
-                </div>
-                <h1 style={{ fontSize: '2rem', fontWeight: 700, marginBottom: '1rem' }}>Top Companies</h1>
-                <p style={{ color: 'var(--muted-foreground)', maxWidth: '500px', margin: '0 auto' }}>
-                    We are currently curating a list of the best companies to work for.
-                    Check back soon for detailed company profiles and reviews.
-                </p>
-            </MotionWrapper>
-        </div>
-    );
+    return <CompaniesPageClient />;
 }

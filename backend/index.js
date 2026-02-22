@@ -5,7 +5,24 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const cookieParser = require('cookie-parser');
+const path = require('path');
+const fs = require('fs');
 const connectDB = require('./config/db');
+
+// Ensure upload directories exist (handled gracefully for serverless environments)
+try {
+    const uploadDir = path.join(__dirname, 'uploads');
+    const resumeDir = path.join(uploadDir, 'resumes');
+
+    // On serverless environments like Vercel, the filesystem is often read-only
+    // We only attempt to create directories if we're not running in a strictly read-only env
+    if (!process.env.VERCEL) {
+        if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+        if (!fs.existsSync(resumeDir)) fs.mkdirSync(resumeDir, { recursive: true });
+    }
+} catch (error) {
+    console.warn('⚠️ Warning: Could not create upload directories. This might be expected in a serverless environment:', error.message);
+}
 
 // Load environment variables
 dotenv.config();
@@ -53,7 +70,7 @@ const corsOptions = {
         const whitelist = [
             'http://localhost:3000',
             'http://localhost:3001',
-            'https://job-listing-portal-bwvf.vercel.app',
+            'https://job-listing-portal-ten-omega.vercel.app',
             process.env.FRONTEND_URL // Add your production domain
         ].filter(Boolean);
 
@@ -76,6 +93,9 @@ app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 app.use(mongoSanitize()); // Prevent NoSQL injection attacks (strips $ and . from req.body/query/params)
 app.use(cookieParser()); // Cookie parser for HTTP-only cookies
 
+// Static folder for uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Routes
 app.use('/api/auth', require('./features/auth/auth.routes'));
 app.use('/api/jobs', require('./features/jobs/job.routes'));
@@ -96,6 +116,7 @@ app.use((req, res, next) => {
 
 // Error Handler Middleware (must be last — Express identifies it by 4 params)
 app.use((err, req, res, next) => {
+    console.error('Global Error Handler:', err);
     const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
     res.status(statusCode);
 

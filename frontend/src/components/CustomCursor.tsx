@@ -5,6 +5,7 @@ import { motion, useMotionValue, useSpring } from 'framer-motion';
 
 export default function CustomCursor() {
     const [isHovering, setIsHovering] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);
     const cursorX = useMotionValue(-100);
     const cursorY = useMotionValue(-100);
 
@@ -16,6 +17,7 @@ export default function CustomCursor() {
         const moveCursor = (e: MouseEvent) => {
             cursorX.set(e.clientX - 16);
             cursorY.set(e.clientY - 16);
+            if (!isVisible) setIsVisible(true);
         };
 
         const handleMouseOver = (e: MouseEvent) => {
@@ -33,30 +35,38 @@ export default function CustomCursor() {
             }
         };
 
+        const handleMouseLeave = () => setIsVisible(false);
+        const handleMouseEnter = () => setIsVisible(true);
+
         window.addEventListener('mousemove', moveCursor);
         window.addEventListener('mouseover', handleMouseOver);
+        document.addEventListener('mouseleave', handleMouseLeave);
+        document.addEventListener('mouseenter', handleMouseEnter);
 
         return () => {
             window.removeEventListener('mousemove', moveCursor);
             window.removeEventListener('mouseover', handleMouseOver);
+            document.removeEventListener('mouseleave', handleMouseLeave);
+            document.removeEventListener('mouseenter', handleMouseEnter);
         };
-    }, [cursorX, cursorY]);
+    }, [cursorX, cursorY, isVisible]);
 
     return (
         <>
             <style jsx global>{`
-        body, a, button {
-          cursor: none; /* Hide default cursor */
+        *, body, a, button, input, select, textarea, label {
+          cursor: none !important;
         }
         @media (max-width: 768px) {
-           body, a, button {
-             cursor: auto; /* Restore on mobile */
+           *, body, a, button, input, select, textarea, label {
+             cursor: auto !important;
            }
            .custom-cursor {
              display: none !important;
            }
         }
       `}</style>
+            {/* Outer ring */}
             <motion.div
                 className="custom-cursor"
                 style={{
@@ -68,34 +78,38 @@ export default function CustomCursor() {
                     width: '32px',
                     height: '32px',
                     borderRadius: '50%',
-                    border: '1px solid var(--foreground)',
+                    border: '2px solid #1a1a2e',
+                    boxShadow: '0 0 0 1px rgba(255,255,255,0.5)',
                     pointerEvents: 'none',
                     zIndex: 9999,
-                    mixBlendMode: 'difference',
-                    backgroundColor: isHovering ? 'var(--foreground)' : 'transparent',
+                    opacity: isVisible ? 1 : 0,
+                    backgroundColor: isHovering ? 'rgba(26, 26, 46, 0.15)' : 'transparent',
                 }}
                 animate={{
-                    scale: isHovering ? 2.5 : 1,
+                    scale: isHovering ? 2 : 1,
                 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             />
+            {/* Center dot */}
             <motion.div
                 className="custom-cursor"
                 style={{
                     translateX: cursorXSpring,
                     translateY: cursorYSpring,
                     position: 'fixed',
-                    left: 14, // Center dot
-                    top: 14,
-                    width: '4px',
-                    height: '4px',
-                    backgroundColor: 'var(--foreground)',
+                    left: 13,
+                    top: 13,
+                    width: '6px',
+                    height: '6px',
+                    backgroundColor: '#1a1a2e',
+                    boxShadow: '0 0 0 1px rgba(255,255,255,0.8)',
                     borderRadius: '50%',
                     pointerEvents: 'none',
                     zIndex: 9999,
-                    mixBlendMode: 'difference'
+                    opacity: isVisible ? 1 : 0,
                 }}
             />
         </>
     );
 }
+

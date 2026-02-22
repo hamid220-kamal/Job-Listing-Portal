@@ -34,8 +34,8 @@ const getDashboardStats = async (req, res) => {
         apps.forEach(a => { if (statusCounts[a.status] !== undefined) statusCounts[a.status]++; });
 
         // Profile completeness
-        const user = await User.findById(userId).lean();
-        const completeness = calcCompleteness(user);
+        const user = await User.findById(userId);
+        const completeness = user ? user.getCompleteness() : { score: 0, missing: [] };
 
         // Recent jobs matching skills (up to 6)
         const skills = user?.skills || [];
@@ -78,35 +78,6 @@ const getDashboardStats = async (req, res) => {
     }
 };
 
-/* ── Helper: profile completeness (mirrors user model logic) ── */
-function calcCompleteness(u) {
-    if (!u) return { score: 0, missing: [] };
-    const checks = [
-        { key: 'name', label: 'Full Name' },
-        { key: 'bio', label: 'Bio' },
-        { key: 'headline', label: 'Headline' },
-        { key: 'avatar', label: 'Profile Photo' },
-        { key: 'resume', label: 'Resume' },
-    ];
-    const arrayChecks = [
-        { key: 'skills', label: 'Skills' },
-        { key: 'experience', label: 'Experience' },
-        { key: 'education', label: 'Education' },
-    ];
-    const linkChecks = [{ path: 'socialLinks.linkedin', label: 'LinkedIn Profile' }];
 
-    let filled = 0;
-    const total = checks.length + arrayChecks.length + linkChecks.length;
-    const missing = [];
-
-    checks.forEach(c => { if (u[c.key]) filled++; else missing.push(c.label); });
-    arrayChecks.forEach(c => { if (u[c.key]?.length) filled++; else missing.push(c.label); });
-    linkChecks.forEach(c => {
-        const val = c.path.split('.').reduce((o, k) => o?.[k], u);
-        if (val) filled++; else missing.push(c.label);
-    });
-
-    return { score: Math.round((filled / total) * 100), missing };
-}
 
 module.exports = { getDashboardStats };

@@ -9,13 +9,13 @@ A professional, full-stack MERN application connecting top-tier talent with worl
 The project follows a **Feature-Based Architecture** on the backend and uses a **Hybrid Auth Architecture** to facilitate seamless collaboration across different environments.
 
 ```mermaid
-graph TD
-    A[Frontend: Next.js 15] -->|API Requests| B[Backend Proxy: Express]
-    B -->|Local Features| C[(Local MongoDB)]
-    B -->|Auth Verification| D[Deployed Auth Server]
-    D --> E[(Cloud MongoDB Atlas)]
+flowchart TD
+    A[Frontend: Next.js 15] -->|API| B(Backend: Express)
+    B -->|Local Data| C[(Local MongoDB)]
+    B -->|Remote Auth| D[Auth Server]
+    D --> E[(Cloud MongoDB)]
     
-    subgraph "Hybrid Auth Mode"
+    subgraph HybridMode ["Hybrid Auth Architecture"]
     B
     D
     end

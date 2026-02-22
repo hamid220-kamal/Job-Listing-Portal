@@ -19,7 +19,7 @@ export default function BottomNav() {
 
     // Build nav items dynamically based on auth state
     const profileHref = user
-        ? (user.role === 'employer' ? '/dashboard/employer/profile' : '/dashboard/candidate/profile')
+        ? (user.role === 'employer' ? `/profile/employer/${user._id}` : `/profile/candidate/${user._id}`)
         : '/auth/login';
 
     const navItems = [

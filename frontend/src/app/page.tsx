@@ -233,7 +233,7 @@ export default function Home() {
       </section>
 
       {/* --- HOW IT WORKS (Dark Mode) --- */}
-      <section style={{ padding: '8rem 0', background: '#09090b', color: 'white', position: 'relative', overflow: 'hidden' }}>
+      <section style={{ padding: 'var(--section-padding) 0', background: '#09090b', color: 'white', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
 
         <div className="container">

@@ -3,9 +3,9 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { motion, useScroll, useMotionValueEvent, useMotionTemplate, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useMotionValueEvent, useMotionTemplate, useMotionValue, useSpring, useTransform, Variants } from 'framer-motion';
 import Button from './Button';
-import { Search, Bell, Menu } from 'lucide-react';
+import { Search, Bell, Menu, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const navLinks = [
@@ -55,6 +55,7 @@ import { useAuth } from '@/context/AuthContext';
 
 export default function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
     const pathname = usePathname();
     const { scrollY } = useScroll();
     const { user, logout } = useAuth();
@@ -72,6 +73,16 @@ export default function Navbar() {
     useMotionValueEvent(scrollY, "change", (latest) => {
         setIsScrolled(latest > 10);
     });
+
+    const menuVariants: Variants = {
+        open: { x: 0, transition: { type: "spring", stiffness: 300, damping: 30 } },
+        closed: { x: "100%", transition: { type: "spring", stiffness: 300, damping: 30 } },
+    } as any;
+
+    const overlayVariants = {
+        open: { opacity: 1 },
+        closed: { opacity: 0 },
+    };
 
     return (
         <>
@@ -257,7 +268,12 @@ export default function Navbar() {
                         </div>
 
                         {/* Mobile Menu Icon */}
-                        <button className="mobile-only" aria-label="Menu" style={{ padding: '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#ffffff' }}>
+                        <button
+                            className="mobile-only"
+                            onClick={() => setIsOpen(true)}
+                            aria-label="Menu"
+                            style={{ padding: '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#ffffff' }}
+                        >
                             <Menu size={28} />
                         </button>
                     </div>
@@ -266,6 +282,123 @@ export default function Navbar() {
 
             {/* Spacing for fixed header */}
             <div style={{ height: '80px' }} />
+
+            {/* Mobile Drawer */}
+            <AnimatePresence>
+                {isOpen && (
+                    <>
+                        <motion.div
+                            variants={overlayVariants}
+                            initial="closed"
+                            animate="open"
+                            exit="closed"
+                            onClick={() => setIsOpen(false)}
+                            style={{
+                                position: 'fixed',
+                                inset: 0,
+                                background: 'rgba(0,0,0,0.6)',
+                                backdropFilter: 'blur(8px)',
+                                zIndex: 100
+                            }}
+                        />
+                        <motion.div
+                            variants={menuVariants}
+                            initial="closed"
+                            animate="open"
+                            exit="closed"
+                            style={{
+                                position: 'fixed',
+                                top: 0,
+                                right: 0,
+                                bottom: 0,
+                                width: '85%',
+                                maxWidth: '360px',
+                                background: '#09090b',
+                                borderLeft: '1px solid rgba(255,255,255,0.08)',
+                                padding: '2rem',
+                                zIndex: 101,
+                                display: 'flex',
+                                flexDirection: 'column'
+                            }}
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
+                                <span style={{ fontWeight: 800, fontSize: '1.5rem', color: '#ffffff' }}>Menu</span>
+                                <button
+                                    onClick={() => setIsOpen(false)}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ffffff' }}
+                                >
+                                    <X size={28} />
+                                </button>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                {navLinks.map((item) => (
+                                    <Link
+                                        key={item.name}
+                                        href={item.href}
+                                        onClick={() => setIsOpen(false)}
+                                        style={{
+                                            fontSize: '1.25rem',
+                                            fontWeight: 600,
+                                            color: pathname === item.href ? '#ffffff' : '#a1a1aa',
+                                            textDecoration: 'none'
+                                        }}
+                                    >
+                                        {item.name}
+                                    </Link>
+                                ))}
+                            </div>
+
+                            <div style={{ marginTop: 'auto', paddingTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                                {user ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                            <div style={{
+                                                width: '48px', height: '48px', borderRadius: '12px',
+                                                background: 'linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                color: '#09090b', fontWeight: 800
+                                            }}>
+                                                {user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                                            </div>
+                                            <div>
+                                                <div style={{ fontWeight: 700, color: '#ffffff' }}>{user.name}</div>
+                                                <div style={{ fontSize: '0.85rem', color: '#a1a1aa' }}>{user.email}</div>
+                                            </div>
+                                        </div>
+                                        <Link href={user.role === 'employer' ? `/profile/employer/${user._id}` : `/profile/candidate/${user._id}`} onClick={() => setIsOpen(false)}>
+                                            <Button style={{ width: '100%', background: '#ffffff', color: '#09090b' }}>My Profile</Button>
+                                        </Link>
+                                        <button
+                                            onClick={async () => {
+                                                await logout();
+                                                setIsOpen(false);
+                                                toast.success('Logged out');
+                                            }}
+                                            style={{
+                                                padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444',
+                                                border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '12px',
+                                                fontWeight: 600, cursor: 'pointer'
+                                            }}
+                                        >
+                                            Logout
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                        <Link href="/auth/login" onClick={() => setIsOpen(false)}>
+                                            <Button variant="outline" style={{ width: '100%', color: 'white', borderColor: 'rgba(255,255,255,0.1)' }}>Log in</Button>
+                                        </Link>
+                                        <Link href="/auth/signup" onClick={() => setIsOpen(false)}>
+                                            <Button style={{ width: '100%', background: '#ffffff', color: '#09090b' }}>Get Started</Button>
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
 
             <style jsx global>{`
         @media (max-width: 768px) {

@@ -42,7 +42,7 @@ export default function SignupPageClient() {
 
     const roleSelectorStyle = (active: boolean) => ({
         flex: 1,
-        padding: '1rem',
+        padding: '0.75rem',
         borderRadius: '12px',
         border: active ? '2px solid #2563eb' : '1px solid #e4e4e7',
         background: active ? '#eff6ff' : 'white',
@@ -52,11 +52,12 @@ export default function SignupPageClient() {
     });
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', padding: '2rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', padding: '1rem' }}>
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                style={{ width: '100%', maxWidth: '400px', background: 'white', padding: '2.5rem', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.05)', border: '1px solid #f4f4f5' }}
+                className="auth-card"
+                style={{ width: '100%', maxWidth: '400px', background: 'white', padding: '2rem', borderRadius: '24px', boxShadow: '0 20px 40px rgba(0,0,0,0.05)', border: '1px solid #f4f4f5' }}
             >
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                     <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#18181b', marginBottom: '0.5rem' }}>Create Account</h1>

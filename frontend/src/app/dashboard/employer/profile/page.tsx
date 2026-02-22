@@ -405,6 +405,11 @@ export default function EmployerProfile() {
 
                     {/* ── Actions ── */}
                     <div className={s.actions}>
+                        <Link href={`/profile/employer/${user?._id}`}>
+                            <Button type="button" variant="outline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                View Public Profile ↗
+                            </Button>
+                        </Link>
                         <Button type="button" variant="secondary" onClick={() => router.push('/dashboard/employer')}>
                             Cancel
                         </Button>

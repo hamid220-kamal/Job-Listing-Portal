@@ -9,8 +9,9 @@ async function getProfile(id: string) {
     return res.json();
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-    const profile = await getProfile(params.id);
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const { id } = await params;
+    const profile = await getProfile(id);
     if (!profile) return { title: 'Company Not Found | JobPortal' };
 
     const companyName = profile.company || profile.name;
@@ -25,9 +26,10 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     };
 }
 
-export default async function PublicEmployerPage({ params }: { params: { id: string } }) {
-    const profile = await getProfile(params.id);
+export default async function PublicEmployerPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    const profile = await getProfile(id);
 
-    return <EmployerProfileClient profile={profile} id={params.id} />;
+    return <EmployerProfileClient profile={profile} id={id} />;
 }
 

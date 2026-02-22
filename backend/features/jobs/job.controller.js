@@ -62,6 +62,7 @@ const createJob = async (req, res) => {
             const msgs = Object.values(err.errors).map(e => e.message);
             return res.status(400).json({ message: msgs.join(', ') });
         }
+        console.error('createJob error:', err);
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -125,4 +126,22 @@ const getMyJobs = async (req, res) => {
     }
 };
 
-module.exports = { getJobs, getJob, createJob, updateJob, deleteJob, getMyJobs };
+// @desc    Get jobs by employer ID
+// @route   GET /api/jobs/employer/:id
+// @access  Public
+const getJobsByEmployer = async (req, res) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: 'Invalid employer ID' });
+        }
+        const jobs = await Job.find({ postedBy: req.params.id, status: 'active' })
+            .sort('-createdAt')
+            .lean();
+        res.status(200).json(jobs);
+    } catch (err) {
+        console.error('getJobsByEmployer error:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+module.exports = { getJobs, getJob, createJob, updateJob, deleteJob, getMyJobs, getJobsByEmployer };

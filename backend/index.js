@@ -107,6 +107,7 @@ app.use((req, res, next) => {
 
 // Error Handler Middleware (must be last — Express identifies it by 4 params)
 app.use((err, req, res, next) => {
+    console.error('Global Error Handler:', err);
     const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
     res.status(statusCode);
 

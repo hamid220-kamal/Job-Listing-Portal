@@ -11,7 +11,7 @@ const {
     getPublicProfile,
 } = require('./profile.controller');
 const { protect } = require('../../middleware/authMiddleware');
-const { upload } = require('../../middleware/uploadMiddleware');
+const { upload, resumeUpload } = require('../../middleware/uploadMiddleware');
 
 // Private routes (require auth)
 router.route('/')

@@ -1,4 +1,5 @@
 const asyncHandler = require('express-async-handler');
+const mongoose = require('mongoose');
 const { body, param, validationResult } = require('express-validator');
 const User = require('../auth/user.model');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../../middleware/uploadMiddleware');
@@ -246,6 +247,11 @@ const getCompleteness = asyncHandler(async (req, res) => {
 // ─── GET /api/profile/:id — public profile ───────────────────
 
 const getPublicProfile = asyncHandler(async (req, res) => {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        res.status(400);
+        throw new Error('Invalid profile ID format');
+    }
+
     const user = await User.findById(req.params.id).select(
         '-password -avatarPublicId -resumePublicId -logoPublicId -__v'
     );

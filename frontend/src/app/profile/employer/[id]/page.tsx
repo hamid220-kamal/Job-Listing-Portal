@@ -33,3 +33,4 @@ export default async function PublicEmployerPage({ params }: { params: Promise<{
     return <EmployerProfileClient profile={profile} id={id} />;
 }
 
+

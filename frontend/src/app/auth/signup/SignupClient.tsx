@@ -107,6 +107,7 @@ export default function SignupPageClient() {
                         type="password"
                         placeholder="Minimum 8 characters"
                         required
+                        autoComplete="new-password"
                         value={formData.password}
                         onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     />

@@ -1,8 +1,9 @@
 import { Metadata } from 'next';
 import EmployerProfileClient from './EmployerProfileClient';
+import { API_URL } from '@/config/apiConfig';
 
 async function getProfile(id: string) {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/profile/${id}`, {
+    const res = await fetch(`${API_URL}/profile/${id}`, {
         next: { revalidate: 60 }
     });
     if (!res.ok) return null;

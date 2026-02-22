@@ -1,6 +1,5 @@
 import axios, { InternalAxiosRequestConfig, AxiosError } from 'axios';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://job-listing-portal-ten-omega.vercel.app/api';
+import { API_URL } from '@/config/apiConfig';
 
 const api = axios.create({
     baseURL: API_URL,

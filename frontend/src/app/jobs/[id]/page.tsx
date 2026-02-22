@@ -1,7 +1,7 @@
 import { Metadata, ResolvingMetadata } from 'next';
 import JobDetailsClient from './JobDetailsClient';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://job-listing-portal-ten-omega.vercel.app/api';
+import { API_URL, SITE_URL } from '@/config/apiConfig';
 
 type Props = {
     params: Promise<{ id: string }>
@@ -25,7 +25,7 @@ export async function generateMetadata(
             openGraph: {
                 title: `${job.title} Job Opportunity`,
                 description: `Competitive ${job.salary} position available now.`,
-                url: `https://job-listing-portal-ten-omega.vercel.app/jobs/${id}`,
+                url: `${SITE_URL}/jobs/${id}`,
             },
         };
     } catch (error) {

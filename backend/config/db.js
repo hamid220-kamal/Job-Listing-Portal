@@ -62,7 +62,9 @@ const connectDB = async () => {
                 await connectToCloud();
             } catch (error) {
                 if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
-                    console.error('🛑 Cloud connection failed in production. Not falling back to local.');
+                    console.error('🛑 DATABASE ERROR: Connection failed in production/Vercel.');
+                    console.error('👉 TIP: Check if MONGO_URI is correctly set in Vercel Environment Variables.');
+                    console.error('👉 TIP: Ensure MongoDB Atlas IP Whitelist allows Access from Anywhere (0.0.0.0/0).');
                     return;
                 }
                 console.log('⚠️  Checking network or IP Whitelist issues...');

@@ -9,11 +9,20 @@ const path = require('path');
 const fs = require('fs');
 const connectDB = require('./config/db');
 
-// Ensure upload directories exist
-const uploadDir = path.join(__dirname, 'uploads');
-const resumeDir = path.join(uploadDir, 'resumes');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-if (!fs.existsSync(resumeDir)) fs.mkdirSync(resumeDir);
+// Ensure upload directories exist (handled gracefully for serverless environments)
+try {
+    const uploadDir = path.join(__dirname, 'uploads');
+    const resumeDir = path.join(uploadDir, 'resumes');
+
+    // On serverless environments like Vercel, the filesystem is often read-only
+    // We only attempt to create directories if we're not running in a strictly read-only env
+    if (!process.env.VERCEL) {
+        if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+        if (!fs.existsSync(resumeDir)) fs.mkdirSync(resumeDir, { recursive: true });
+    }
+} catch (error) {
+    console.warn('⚠️ Warning: Could not create upload directories. This might be expected in a serverless environment:', error.message);
+}
 
 // Load environment variables
 dotenv.config();

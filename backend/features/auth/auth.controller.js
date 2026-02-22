@@ -41,6 +41,13 @@ const generateToken = (id) => {
     });
 };
 
+// Generate Refresh Token — 30 day lifespan for persistent sessions
+const generateRefreshToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: '30d',
+    });
+};
+
 
 
 // @desc    Register new user
@@ -109,6 +116,15 @@ const registerUser = asyncHandler(async (req, res) => {
 
     if (user) {
         const token = generateToken(user._id);
+        const refreshToken = generateRefreshToken(user._id);
+
+        // Set HTTP-only cookie for refresh token
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for cross-domain production
+            maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
+        });
 
         res.status(201).json({
             _id: user._id,
@@ -155,6 +171,15 @@ const loginUser = asyncHandler(async (req, res) => {
 
     if (user && (await user.matchPassword(password))) {
         const token = generateToken(user._id);
+        const refreshToken = generateRefreshToken(user._id);
+
+        // Set HTTP-only cookie for refresh token
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            maxAge: 30 * 24 * 60 * 60 * 1000
+        });
 
         res.json({
             _id: user._id,
@@ -211,9 +236,36 @@ const validateToken = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc    Refresh access token
+// @route   POST /api/auth/refresh
+// @access  Public (Uses Cookie)
+const refreshToken = asyncHandler(async (req, res) => {
+    const cookies = req.cookies;
+    if (!cookies?.refreshToken) {
+        return res.status(401).json({ message: 'No refresh token provided' });
+    }
+
+    const token = cookies.refreshToken;
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id).select('_id name email role');
+
+        if (!user) {
+            return res.status(401).json({ message: 'User not found' });
+        }
+
+        const accessToken = generateToken(user._id);
+        res.json({ token: accessToken, user });
+    } catch (error) {
+        res.status(401).json({ message: 'Invalid refresh token' });
+    }
+});
+
 module.exports = {
     registerUser,
     loginUser,
     getMe,
     validateToken,
+    refreshToken,
 };

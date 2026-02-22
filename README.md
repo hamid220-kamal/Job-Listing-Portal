@@ -1,133 +1,104 @@
-# Job Listing Portal
-# testing
-# HELLO
+# 💼 Job Listing Portal
 
+A professional, full-stack MERN application connecting top-tier talent with world-class organizations. Built with **Next.js 15 (App Router)**, **Express**, and **MongoDB**.
 
-A full-stack MERN application for connecting Job Seekers with Employers. Built with **Next.js**, **Express**, and **MongoDB**.
+---
+
+## 🏗️ Architecture Overview
+
+The project follows a **Feature-Based Architecture** on the backend and uses a **Hybrid Auth Architecture** to facilitate seamless collaboration across different environments.
+
+```mermaid
+graph TD
+    A[Frontend: Next.js 15] -->|API Requests| B[Backend Proxy: Express]
+    B -->|Local Features| C[(Local MongoDB)]
+    B -->|Auth Verification| D[Deployed Auth Server]
+    D --> E[(Cloud MongoDB Atlas)]
+    
+    subgraph "Hybrid Auth Mode"
+    B
+    D
+    end
+```
+
+### Folder Structure
+- **`frontend/`**: Next.js 15 application with a modern, glassmorphic UI.
+- **`backend/`**: Modular architecture where each feature (auth, jobs, apps, profile) is self-contained.
+
+---
 
 ## 🚀 Key Features
 
-- **Authentication**: Secure Login/Signup with JWT (Access + Refresh Tokens).
-- **Hybrid Architecture**:
-  - **Deployed Auth**: Centralized authentication server.
-  - **Local Development**: Isolated backend development for other features.
-- **Role-Based Access**: Specialized dashboards for **Candidates** and **Employers**.
-- **Job Management**: create, edit, delete, and search jobs.
-- **Applications**: Apply to jobs and track status.
+- **Advanced Search**: Filter by keywords [title/company], location, and multiple job types.
+- **Role-Based Experience**: Distinct dashboards and permissions for Candidates and Employers.
+- **Real-Time Dashboards**: Instant statistics on applications, job status, and profile completeness.
+- **Profile Management**: Structured profile builder with Cloudinary-powered file uploads (Logo, Avatar, Resume).
+- **Silent Token Refresh**: Automatic session extension for a frictionless user experience.
+- **SEO Optimized**: Dynamic metadata, robots.txt, and sitemap generation for maximum visibility.
 
 ---
 
-## 📂 Project Structure
+## 📡 API Documentation
 
-- **`frontend/`**: Next.js 15 App Router application.
-- **`backend/`**: Express.js server with Feature-Based Architecture.
+| Endpoint | Method | Auth | Description |
+|---|---|---|---|
+| `/auth/signup` | POST | Public | Register a new Candidate or Employer |
+| `/auth/login` | POST | Public | Authenticate and receive JWT |
+| `/auth/refresh` | POST | Public | Silent refresh of access token via cookie |
+| `/auth/me` | GET | Private | Get currently authenticated user profile |
+| `/jobs` | GET | Public | Get paginated list of all jobs |
+| `/jobs/:id` | GET | Public | Get detailed information for a specific job |
+| `/jobs` | POST | Employer | Post a new job opportunity |
+| `/search` | GET | Public | Advanced search with filters and sorting |
+| `/applications/:jobId` | POST | Candidate| Apply for a job (requires resume) |
+| `/applications/me` | GET | Candidate| View your application history |
+| `/dashboard` | GET | Private | Statistical summary for current user role |
 
 ---
 
-## 🤝 Collaboration Workflow (How to work on this repo)
+## 🤝 Collaboration Workflow
 
 We use a **Hybrid Workflow** to ensure security (no shared secrets) while allowing easy collaboration.
 
 ### Role 1: Frontend Developer (Zero Config)
-*Goal: Build UI components without running the backend.*
-
-1.  Clone the repository.
-2.  Open `frontend/` terminal.
-3.  Run:
-    ```bash
-    npm run dev
-    ```
-4.  **That's it!** The app automatically connects to our **Deployed Backend API**. You can login, view jobs, and interact with real production data immediately.
+- Connects automatically to the **Deployed Backend API**.
+- Use production-like data without running any backend locally.
 
 ### Role 2: Backend Developer (Isolated Dev)
-*Goal: Build new backend features (Profile, Jobs, etc.) without breaking production.*
-
-1.  Clone the repository.
-2.  Open `backend/` terminal.
-3.  Run:
-    ```bash
-    npm run dev
-    ```
-4.  **Automatic Fallback:** Since you don't have the `.env` file, the server will:
-    - Connect to your **Local MongoDB**.
-    - Use **Remote Auth Verification**: It verifies tokens by asking the Deployed Server.
-    - **Result:** You can login (via frontend) and your local backend accepts the token, even though you don't have the secret key!
-5.  **Important:** To test your local backend with the frontend, create `frontend/.env.local` with:
-    ```env
-    NEXT_PUBLIC_API_URL=http://localhost:5000/api
-    ```
-6.  **Get Data:** Run this command to populate your local DB with test user/jobs:
-    ```bash
-    npm run seed:local
-    ```
-
-### Role 3: Admin / Lead (You)
-*Goal: Manage production, deployment, and secrets.*
-
-- You have the `.env` file.
-- You can run against Cloud DB: `npm run dev:cloud`
-- You can run against Local DB: `npm run dev:local`
-- You can deploy to Vercel.
+- Runs server against **Local MongoDB**.
+- Uses **Remote Auth Verification**: Local backend trusts production tokens by verifying them against the lead server.
+- Allows building features like "Profile" or "Jobs" locally while using "Auth" from production.
 
 ---
 
-## 🛠️ Setup & Scripts
+## 🛠️ Environment Variables
 
-### Prerequisites
-- Node.js (v18+)
-- MongoDB (Community Edition) installed locally (for Backend Developers).
+### Backend (`.env`)
+- `MONGO_URI`: MongoDB Atlas connection string.
+- `JWT_SECRET`: Secret key for JWT signing.
+- `CLOUDINARY_CLOUD_NAME`, `API_KEY`, `API_SECRET`: Media storage credentials.
+- `FRONTEND_URL`: For CORS whitelist.
 
-### Backend Scripts
-Run these inside `backend/`:
-
-| Command | Description |
-|OS|Status|
-|---|---|
-| `npm run dev` | Auto-detects mode. (Cloud if `.env` exists, Local if not). |
-| `npm run dev:cloud` | **Diff**: Forces connection to MongoDB Atlas (requires `.env`). |
-| `npm run dev:local` | **Diff**: Forces connection to Local MongoDB. |
-| `npm run seed:cloud` | **Reset**: Wipes Cloud DB and seeds fresh data. |
-| `npm run seed:local` | **Reset**: Wipes Local DB and seeds fresh data. |
-
-### Frontend Scripts
-Run these inside `frontend/`:
-
-| Command | Description |
-|---|---|
-| `npm run dev` | Starts Next.js dev server (localhost:3000). |
-| `npm run build` | Builds for production. |
+### Frontend (`.env.local`)
+- `NEXT_PUBLIC_API_URL`: URL of the backend API.
 
 ---
 
-## 🌐 Deployment (Vercel)
+## 📦 Getting Started
 
-Both Frontend and Backend are configured for Vercel Serverless deployment.
+### Backend
+```bash
+npm install
+npm run dev
+```
 
-### Backend Deployment
-1.  Import `backend/` folder to Vercel.
-2.  Environment Variables:
-    - `MONGO_URI`: Your Atlas Connection String.
-    - `JWT_SECRET`: Your Secret Key.
-    - `NODE_ENV`: `production`
-
-### Frontend Deployment
-1.  Import `frontend/` folder to Vercel.
-2.  Environment Variables:
-    - `NEXT_PUBLIC_API_URL`: `https://your-backend-url.vercel.app/api`
+### Frontend
+```bash
+npm install
+npm run dev
+```
 
 ---
 
-## 🔐 Security & Architecture
-
-- **.gitignore**: Explicitly ignores `.env`. Secrets are never pushed.
-- **Remote Verification**: `POST /api/auth/validate-token` allows local backends to trust production tokens without sharing keys.
-- **Rate Limiting**: Protected against brute-force attacks.
-- **Helmet**: Secure HTTP headers.
-
----
-
-## 📝 Tech Stack
-
-- **Frontend**: Next.js, Tailwind CSS, Framer Motion, Axios.
-- **Backend**: Express.js, Mongoose, JWT, bcryptjs.
-- **Database**: MongoDB Atlas (Production), MongoDB Local (Development).
+## 📄 License
+MIT License. Created for the Community.

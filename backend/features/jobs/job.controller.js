@@ -1,16 +1,30 @@
 const mongoose = require('mongoose');
 const Job = require('./job.model');
+const Application = require('../applications/application.model');
 
 // @desc    Get all jobs
 // @route   GET /api/jobs
 // @access  Public
 const getJobs = async (req, res) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip = (page - 1) * limit;
+
+        const total = await Job.countDocuments();
         const jobs = await Job.find()
             .populate('postedBy', 'name company')
             .sort('-createdAt')
+            .skip(skip)
+            .limit(limit)
             .lean();
-        res.status(200).json(jobs);
+
+        res.status(200).json({
+            jobs,
+            total,
+            page,
+            pages: Math.ceil(total / limit)
+        });
     } catch (err) {
         console.error('getJobs error:', err);
         res.status(500).json({ message: 'Server error' });
@@ -87,6 +101,10 @@ const deleteJob = async (req, res) => {
             return res.status(403).json({ message: 'Not authorised' });
         }
         await job.deleteOne();
+
+        // Cascade delete: Remove all applications associated with this job
+        await Application.deleteMany({ job: req.params.id });
+
         res.status(200).json({ id: req.params.id });
     } catch (err) {
         res.status(500).json({ message: 'Server error' });

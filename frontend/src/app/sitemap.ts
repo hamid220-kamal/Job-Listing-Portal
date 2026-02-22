@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next';
 
 import { SITE_URL, API_URL } from '@/config/apiConfig';
 
-export async function sitemap(): Promise<MetadataRoute.Sitemap> {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Static routes
     const staticRoutes: MetadataRoute.Sitemap = [
         { url: SITE_URL, lastModified: new Date(), changeFrequency: 'daily', priority: 1.0 },

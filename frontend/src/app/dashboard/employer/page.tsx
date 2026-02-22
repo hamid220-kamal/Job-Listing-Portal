@@ -35,6 +35,8 @@ export default function EmployerDashboard() {
         const fetchJobs = async () => {
             try {
                 const res = await api.get('/jobs');
+                // console.log("All Jobs from Backend:", res.data); // <--- ADDED
+                // console.log("Logged in User ID:", user?._id);    // <--- ADDED
                 // Filter jobs posted by this employer
                 const myJobs = res.data.filter((job: any) => job.postedBy?._id === user?._id);
                 setJobs(myJobs);

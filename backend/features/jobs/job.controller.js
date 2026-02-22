@@ -1,131 +1,110 @@
 const Job = require('./job.model');
 
-// In-memory array to store jobs
-let jobs = [
-    {
-        _id: 'job-1',
-        title: 'Software Engineer',
-        company: 'Tech Corp',
-        location: 'Remote',
-        description: 'Great job opportunity.',
-        salary: '120000',
-        postedBy: {
-            _id: 'dummy-user-id',
-            name: 'Dummy User',
-            company: 'Tech Corp'
-        },
-        createdAt: new Date(),
-    },
-    {
-        _id: 'job-2',
-        title: 'Product Manager',
-        company: 'Product Co',
-        location: 'New York',
-        description: 'Lead the product team.',
-        salary: '140000',
-        postedBy: {
-            _id: 'dummy-user-id-2',
-            name: 'Another User',
-            company: 'Product Co'
-        },
-        createdAt: new Date(),
-    }
-];
+// --- REMOVED: let jobs = [...] array has been deleted ---
 
 // @desc    Get all jobs
 // @route   GET /api/jobs
-// @access  Public
 const getJobs = async (req, res) => {
-    res.status(200).json(jobs);
+    try {
+        // CHANGED: Instead of returning the 'jobs' array, we query MongoDB
+        const allJobs = await Job.find().sort({ createdAt: -1 });
+        res.status(200).json(allJobs);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error' });
+    }
 };
 
 // @desc    Get single job
 // @route   GET /api/jobs/:id
-// @access  Public
 const getJob = async (req, res) => {
-    const job = jobs.find(j => j._id === req.params.id);
+    try {
+        // CHANGED: Using findById instead of array.find()
+        const job = await Job.findById(req.params.id);
 
-    if (!job) {
-        res.status(404).json({ message: 'Job not found' });
-        return;
+        if (!job) {
+            return res.status(404).json({ message: 'Job not found' });
+        }
+
+        res.status(200).json(job);
+    } catch (error) {
+        res.status(404).json({ message: 'Invalid Job ID' });
     }
-
-    res.status(200).json(job);
 };
 
 // @desc    Create new job
 // @route   POST /api/jobs
-// @access  Private
 const createJob = async (req, res) => {
     if (!req.body.title || !req.body.company || !req.body.salary) {
-        res.status(400).json({ message: 'Please add required fields' });
-        return;
+        return res.status(400).json({ message: 'Please add required fields' });
     }
 
-    const newJob = {
-        _id: 'job-' + Date.now(),
-        ...req.body,
-        postedBy: {
-            _id: req.user.id,
-            name: req.user.name,
-            company: req.body.company
-        },
-        createdAt: new Date(),
-    };
+    try {
+        // CHANGED: Using Job.create() to save permanently to MongoDB
+        // This ensures the dashboard's countDocuments() can actually see it!
+        const newJob = await Job.create({
+            ...req.body,
+            employer: req.user.id, // Links job to the logged-in user
+            postedBy: {
+                _id: req.user.id,
+                name: req.user.name,
+                company: req.body.company
+            }
+        });
 
-    jobs.push(newJob);
-
-    res.status(201).json(newJob);
+        res.status(201).json(newJob);
+    } catch (error) {
+        res.status(400).json({ message: 'Error creating job' });
+    }
 };
 
 // @desc    Update job
 // @route   PUT /api/jobs/:id
-// @access  Private
 const updateJob = async (req, res) => {
-    const jobIndex = jobs.findIndex(j => j._id === req.params.id);
+    try {
+        // CHANGED: Using findByIdAndUpdate instead of array indexing
+        const job = await Job.findById(req.params.id);
 
-    if (jobIndex === -1) {
-        res.status(404).json({ message: 'Job not found' });
-        return;
+        if (!job) {
+            return res.status(404).json({ message: 'Job not found' });
+        }
+
+        // Verify ownership (security check)
+        if (job.employer.toString() !== req.user.id) {
+            return res.status(401).json({ message: 'User not authorized' });
+        }
+
+        const updatedJob = await Job.findByIdAndUpdate(
+            req.params.id, 
+            req.body, 
+            { new: true } // Returns the updated document
+        );
+
+        res.status(200).json(updatedJob);
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error' });
     }
-
-    const job = jobs[jobIndex];
-
-    // Check for user (simplified for dummy)
-    if (!req.user) {
-        res.status(401).json({ message: 'User not found' });
-        return;
-    }
-
-    // Update job
-    jobs[jobIndex] = { ...job, ...req.body };
-
-    res.status(200).json(jobs[jobIndex]);
 };
 
 // @desc    Delete job
 // @route   DELETE /api/jobs/:id
-// @access  Private
 const deleteJob = async (req, res) => {
-    const jobIndex = jobs.findIndex(j => j._id === req.params.id);
+    try {
+        // CHANGED: Using findById and deleteOne instead of array.filter()
+        const job = await Job.findById(req.params.id);
 
-    if (jobIndex === -1) {
-        res.status(404).json({ message: 'Job not found' });
-        return;
+        if (!job) {
+            return res.status(404).json({ message: 'Job not found' });
+        }
+
+        if (job.employer.toString() !== req.user.id) {
+            return res.status(401).json({ message: 'User not authorized' });
+        }
+
+        await job.deleteOne();
+        res.status(200).json({ id: req.params.id });
+    } catch (error) {
+        res.status(500).json({ message: 'Server Error' });
     }
-
-    const job = jobs[jobIndex];
-
-    // Check for user (simplified)
-    if (!req.user) {
-        res.status(401).json({ message: 'User not found' });
-        return;
-    }
-
-    // Remove job
-    jobs = jobs.filter(j => j._id !== req.params.id);
-
-    res.status(200).json({ id: req.params.id });
 };
 
 module.exports = {

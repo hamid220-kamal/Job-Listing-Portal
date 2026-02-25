@@ -29,7 +29,15 @@ const connectDB = async () => {
             const conn = await mongoose.connect(cloudURI, options);
             console.log(`✅ MongoDB Connected to Cloud: ${conn.connection.host}`);
         } catch (error) {
-            console.error(`❌ Cloud Connection Failed: ${error.message}`);
+            if (error.message.includes('ETIMEDOUT')) {
+                console.error('❌ Cloud Connection Timeout: The server took too long to respond.');
+            } else if (error.message.includes('ECONNREFUSED')) {
+                console.error('❌ Cloud Connection Refused: Ensure the host and port are correct.');
+            } else if (error.message.includes('authentication failed')) {
+                console.error('❌ Cloud Auth Failed: Check your username and password in MONGO_URI.');
+            } else {
+                console.error(`❌ Cloud Connection Failed: ${error.message}`);
+            }
             if (isForced) {
                 console.error('🛑 specific cloud connection requested. Exiting...');
                 process.exit(1);

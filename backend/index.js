@@ -134,6 +134,7 @@ app.use('/api/jobs', require('./features/jobs/job.routes'));
 app.use('/api/applications', require('./features/applications/application.routes'));
 app.use('/api/profile', require('./features/profile/profile.routes'));
 app.use('/api/dashboard', require('./features/dashboard/dashboard.routes'));
+app.use('/api/health', require('./features/health/health.routes'));
 app.use('/api/search', require('./features/search/search.routes'));
 
 // Routes Placeholder
@@ -149,11 +150,30 @@ app.use((req, res, next) => {
 // Error Handler Middleware (must be last — Express identifies it by 4 params)
 app.use((err, req, res, next) => {
     console.error('Global Error Handler:', err);
-    const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-    res.status(statusCode);
 
-    res.json({
-        message: err.message,
+    let statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+    let message = err.message;
+
+    // Handle Mongoose Bad ID
+    if (err.name === 'CastError') {
+        statusCode = 400;
+        message = 'Resource not found';
+    }
+
+    // Handle Mongoose Duplicate Key
+    if (err.code === 11000) {
+        statusCode = 400;
+        message = 'Duplicate field value entered';
+    }
+
+    // Handle Mongoose Validation Error
+    if (err.name === 'ValidationError') {
+        statusCode = 400;
+        message = Object.values(err.errors).map(val => val.message).join(', ');
+    }
+
+    res.status(statusCode).json({
+        message,
         // Only send stack trace in development
         stack: process.env.NODE_ENV === 'production' ? null : err.stack,
     });

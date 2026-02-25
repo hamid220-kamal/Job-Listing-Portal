@@ -61,14 +61,8 @@ export default function EmployerDashboard() {
         if (!user || user.role !== 'employer') return;
         (async () => {
             try {
-                const responseData = res.data;
-                const jobsArray = Array.isArray(responseData) ? responseData : (responseData.jobs || []);
-
-                // Filter jobs posted by this employer
-                const myJobs = jobsArray.filter(
-                    (job: any) => job.postedBy?._id === user?._id || job.postedBy === user?._id
-                );
-                setJobs(myJobs);
+                const { data } = await api.get('/jobs/mine');
+                setJobs(data);
             } catch (err) {
                 console.error('Failed to fetch jobs:', err);
             } finally {

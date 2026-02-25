@@ -236,6 +236,11 @@ export default function Navbar() {
                         <div className="desktop-only" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                             {user ? (
                                 <>
+                                    <Link href={user.role === 'employer' ? '/dashboard/employer' : '/dashboard/candidate'}>
+                                        <MagneticButton style={{ fontSize: '0.95rem', padding: '0.75rem 1.5rem', background: 'rgba(37, 99, 235, 0.05)', color: '#2563eb', border: '1px solid rgba(37, 99, 235, 0.1)', cursor: 'pointer', fontWeight: 700, borderRadius: '12px' }}>
+                                            Dashboard
+                                        </MagneticButton>
+                                    </Link>
                                     <Link href={user.role === 'employer' ? `/profile/employer/${user._id}` : `/profile/candidate/${user._id}`}>
                                         <MagneticButton style={{ fontSize: '0.95rem', padding: '0.75rem 1.5rem', background: 'transparent', color: '#1e293b', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
                                             My Profile
@@ -387,8 +392,13 @@ export default function Navbar() {
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                            <Link href={user.role === 'employer' ? '/dashboard/employer' : '/dashboard/candidate'} onClick={() => setIsOpen(false)} style={{ textDecoration: 'none' }}>
+                                                <Button style={{ width: '100%', borderRadius: '12px', height: '50px', background: 'var(--gradient-primary)', border: 'none' }}>
+                                                    <LayoutDashboard size={18} style={{ marginRight: '8px' }} /> Go to Dashboard
+                                                </Button>
+                                            </Link>
                                             <Link href={user.role === 'employer' ? `/profile/employer/${user._id}` : `/profile/candidate/${user._id}`} onClick={() => setIsOpen(false)} style={{ textDecoration: 'none' }}>
-                                                <Button style={{ width: '100%', borderRadius: '12px', height: '50px' }}>Go to Profile</Button>
+                                                <Button variant="outline" style={{ width: '100%', borderRadius: '12px', height: '50px' }}>My Profile</Button>
                                             </Link>
                                             <button
                                                 onClick={async () => {

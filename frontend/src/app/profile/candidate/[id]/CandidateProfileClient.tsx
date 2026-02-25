@@ -85,11 +85,6 @@ export default function CandidateProfileClient({ profile: initialProfile, id }: 
                         <div style={{ display: 'grid', gap: '0.75rem' }}>
                             {isOwnProfile && (
                                 <>
-                                    <Link href="/dashboard/candidate" style={{ width: '100%' }}>
-                                        <Button style={{ width: '100%', gap: '0.5rem', background: '#2563eb' }}>
-                                            <LayoutDashboard size={16} /> My Dashboard
-                                        </Button>
-                                    </Link>
                                     <Link href="/dashboard/candidate/profile" style={{ width: '100%' }}>
                                         <Button variant="outline" style={{ width: '100%' }}>Edit Profile</Button>
                                     </Link>

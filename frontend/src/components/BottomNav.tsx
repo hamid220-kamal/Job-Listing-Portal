@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, Briefcase, Building2, User, Zap } from 'lucide-react';
+import { Home, Briefcase, Building2, User, Zap, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const baseNavItems = [
@@ -23,7 +23,9 @@ export default function BottomNav() {
         : '/auth/login';
 
     const navItems = [
-        ...baseNavItems,
+        { name: 'Home', href: '/', icon: Home },
+        { name: 'Jobs', href: '/jobs', icon: Briefcase },
+        ...(user ? [{ name: 'Dashboard', href: user.role === 'employer' ? '/dashboard/employer' : '/dashboard/candidate', icon: LayoutDashboard }] : []),
         { name: user ? 'Profile' : 'Login', href: profileHref, icon: User },
     ];
 

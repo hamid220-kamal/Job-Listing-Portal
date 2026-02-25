@@ -93,11 +93,6 @@ export default function EmployerProfileClient({ profile: initialProfile, id }: {
                     </div>
                     {isOwnProfile && (
                         <div style={{ display: 'flex', gap: '1rem' }}>
-                            <Link href="/dashboard/employer">
-                                <Button style={{ background: '#2563eb', color: '#fff', border: 'none', gap: '0.5rem' }}>
-                                    <LayoutDashboard size={18} /> Dashboard
-                                </Button>
-                            </Link>
                             <Link href="/dashboard/employer/profile">
                                 <Button variant="secondary" style={{ backdropFilter: 'blur(8px)', background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}>
                                     Edit Company Profile

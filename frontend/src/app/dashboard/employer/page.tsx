@@ -65,7 +65,10 @@ export default function EmployerDashboard() {
                 // console.log("All Jobs from Backend:", res.data); // <--- ADDED
                 // console.log("Logged in User ID:", user?._id);    // <--- ADDED
                 // Filter jobs posted by this employer
-                const myJobs = res.data.filter((job: any) => job.postedBy?._id === user?._id);
+                // const myJobs = res.data.filter((job: any) => job.postedBy?._id === user?._id);
+                const myJobs = res.data.jobs.filter(
+                 (job: any) => job.postedBy?._id === user?._id
+                );
                 setJobs(myJobs);
             } catch (err) {
                 console.error('Failed to fetch jobs:', err);

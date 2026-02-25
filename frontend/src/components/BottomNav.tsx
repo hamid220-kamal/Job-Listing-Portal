@@ -3,12 +3,11 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, Briefcase, Building2, User, Zap, LayoutDashboard } from 'lucide-react';
+import { Home, Briefcase, Building2, User, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const baseNavItems = [
     { name: 'Home', href: '/', icon: Home },
-    { name: 'Internships', href: '/jobs?type=Internship', icon: Zap },
     { name: 'Jobs', href: '/jobs?type=Full-time', icon: Briefcase },
     { name: 'Companies', href: '/companies', icon: Building2 },
 ];

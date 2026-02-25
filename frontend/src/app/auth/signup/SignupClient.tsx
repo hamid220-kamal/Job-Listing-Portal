@@ -23,10 +23,9 @@ export default function SignupPageClient() {
         setLoading(true);
 
         try {
-            await signup(formData.name, formData.email, formData.password, formData.role);
+            const user = await signup(formData.name, formData.email, formData.password, formData.role);
             toast.success('Account created successfully!');
-            const userData = localStorage.getItem('user');
-            const user = userData ? JSON.parse(userData) : null;
+
             if (formData.role === 'employer') {
                 router.push(user?._id ? `/profile/employer/${user._id}` : '/dashboard/employer');
             } else {
@@ -92,6 +91,7 @@ export default function SignupPageClient() {
                         label="Full Name"
                         placeholder="John Doe"
                         required
+                        autoComplete="name"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     />
@@ -100,6 +100,7 @@ export default function SignupPageClient() {
                         type="email"
                         placeholder="john@example.com"
                         required
+                        autoComplete="email"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     />

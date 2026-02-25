@@ -17,7 +17,7 @@ interface AuthContextType {
     loading: boolean;
     error: string | null;
     login: (email: string, password: string) => Promise<void>;
-    signup: (name: string, email: string, password: string, role: string) => Promise<void>;
+    signup: (name: string, email: string, password: string, role: string) => Promise<User | void>;
     logout: () => void;
     clearError: () => void;
 }
@@ -99,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             localStorage.setItem('token', authToken);
             setUser(userData);
             setToken(authToken);
+            return userData;
         } catch (err: any) {
             const message = err.response?.data?.message || 'Signup failed';
             setError(message);

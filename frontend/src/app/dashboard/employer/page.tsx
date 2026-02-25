@@ -61,13 +61,12 @@ export default function EmployerDashboard() {
         if (!user || user.role !== 'employer') return;
         (async () => {
             try {
-                const res = await api.get('/jobs');
-                // console.log("All Jobs from Backend:", res.data); // <--- ADDED
-                // console.log("Logged in User ID:", user?._id);    // <--- ADDED
+                const responseData = res.data;
+                const jobsArray = Array.isArray(responseData) ? responseData : (responseData.jobs || []);
+
                 // Filter jobs posted by this employer
-                // const myJobs = res.data.filter((job: any) => job.postedBy?._id === user?._id);
-                const myJobs = res.data.jobs.filter(
-                 (job: any) => job.postedBy?._id === user?._id
+                const myJobs = jobsArray.filter(
+                    (job: any) => job.postedBy?._id === user?._id || job.postedBy === user?._id
                 );
                 setJobs(myJobs);
             } catch (err) {

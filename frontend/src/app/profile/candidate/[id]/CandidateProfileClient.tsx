@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import s from '../../../dashboard/profile.module.css';
 import Link from 'next/link';
 import Button from '@/components/Button';
-import { Mail, MapPin, Linkedin, Github, Globe, Twitter, FileText, Briefcase, GraduationCap, Award } from 'lucide-react';
+import { Mail, MapPin, Linkedin, Github, Globe, Twitter, FileText, Briefcase, GraduationCap, Award, LayoutDashboard } from 'lucide-react';
 
 interface Profile {
     _id: string; name: string; headline: string;
@@ -83,11 +83,19 @@ export default function CandidateProfileClient({ profile: initialProfile, id }: 
                         )}
 
                         <div style={{ display: 'grid', gap: '0.75rem' }}>
-                            {isOwnProfile ? (
-                                <Link href="/dashboard/candidate/profile" style={{ width: '100%' }}>
-                                    <Button variant="outline" style={{ width: '100%' }}>Edit Profile</Button>
-                                </Link>
-                            ) : (
+                            {isOwnProfile && (
+                                <>
+                                    <Link href="/dashboard/candidate" style={{ width: '100%' }}>
+                                        <Button style={{ width: '100%', gap: '0.5rem', background: '#2563eb' }}>
+                                            <LayoutDashboard size={16} /> My Dashboard
+                                        </Button>
+                                    </Link>
+                                    <Link href="/dashboard/candidate/profile" style={{ width: '100%' }}>
+                                        <Button variant="outline" style={{ width: '100%' }}>Edit Profile</Button>
+                                    </Link>
+                                </>
+                            )}
+                            {!isOwnProfile && (
                                 <Button style={{ width: '100%', background: 'var(--gradient-primary)', border: 'none' }}>Connect</Button>
                             )}
                             {profile.resume && (

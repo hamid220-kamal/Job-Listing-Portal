@@ -12,6 +12,17 @@ export const metadata: Metadata = {
     }
 };
 
+import { Suspense } from 'react';
+import { Loader2 } from 'lucide-react';
+
 export default function JobsPage() {
-    return <JobsPageClient />;
+    return (
+        <Suspense fallback={
+            <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Loader2 className="spin" size={40} color="var(--accent)" />
+            </div>
+        }>
+            <JobsPageClient />
+        </Suspense>
+    );
 }

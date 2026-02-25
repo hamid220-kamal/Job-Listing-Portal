@@ -579,6 +579,11 @@ export default function CandidateProfile() {
 
                     {/* ── Actions ── */}
                     <div className={s.actions}>
+                        <Link href={`/profile/candidate/${user?._id}`}>
+                            <Button type="button" variant="outline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                View Public Profile ↗
+                            </Button>
+                        </Link>
                         <Button type="button" variant="secondary" onClick={() => router.push('/dashboard/candidate')}>
                             Cancel
                         </Button>

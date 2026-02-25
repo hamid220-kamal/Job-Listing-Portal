@@ -3,14 +3,14 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, Briefcase, Building2, Banknote, User, LogOut } from 'lucide-react';
+import { Home, Briefcase, Building2, User, Zap } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const baseNavItems = [
     { name: 'Home', href: '/', icon: Home },
-    { name: 'Jobs', href: '/jobs', icon: Briefcase },
+    { name: 'Internships', href: '/jobs?type=Internship', icon: Zap },
+    { name: 'Jobs', href: '/jobs?type=Full-time', icon: Briefcase },
     { name: 'Companies', href: '/companies', icon: Building2 },
-    { name: 'Salaries', href: '/salaries', icon: Banknote },
 ];
 
 export default function BottomNav() {
@@ -19,7 +19,7 @@ export default function BottomNav() {
 
     // Build nav items dynamically based on auth state
     const profileHref = user
-        ? (user.role === 'employer' ? '/dashboard/employer/profile' : '/dashboard/candidate/profile')
+        ? (user.role === 'employer' ? `/profile/employer/${user._id}` : `/profile/candidate/${user._id}`)
         : '/auth/login';
 
     const navItems = [
@@ -66,13 +66,13 @@ export default function BottomNav() {
                                 gap: '4px',
                                 width: '100%',
                                 height: '100%',
-                                color: isActive ? 'var(--foreground)' : 'var(--muted-foreground)',
+                                color: isActive ? '#2563eb' : '#64748b',
                                 position: 'relative',
                                 textDecoration: 'none'
                             }}
                         >
                             <div style={{ position: 'relative' }}>
-                                <Icon size={24} strokeWidth={isActive ? 2 : 1.5} />
+                                <Icon size={24} strokeWidth={isActive ? 2.5 : 1.5} />
                                 {isActive && (
                                     <motion.div
                                         layoutId="bottom-nav-indicator"
@@ -81,10 +81,10 @@ export default function BottomNav() {
                                             top: -8,
                                             left: '50%',
                                             x: '-50%',
-                                            width: '4px',
-                                            height: '4px',
+                                            width: '6px',
+                                            height: '6px',
                                             borderRadius: '50%',
-                                            background: 'var(--foreground)',
+                                            background: '#2563eb',
                                         }}
                                     />
                                 )}

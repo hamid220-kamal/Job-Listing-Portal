@@ -30,8 +30,9 @@ export default function Button({
 
     const variantStyles = {
         primary: {
-            backgroundColor: 'var(--primary)',
-            color: 'var(--primary-foreground)',
+            backgroundColor: '#2563eb',
+            color: '#ffffff',
+            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)',
         },
         secondary: {
             backgroundColor: 'var(--background)',

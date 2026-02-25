@@ -1,9 +1,17 @@
 const mongoose = require('mongoose');
 
 const connectDB = async () => {
+    // Idempotency: If already connected or connecting, don't start a new attempt
+    if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+        return;
+    }
+
     // Connection options
     const options = {
-        serverSelectionTimeoutMS: 5000, // 5 second timeout for quick fallback
+        serverSelectionTimeoutMS: 5000,
+        connectTimeoutMS: 10000,
+        socketTimeoutMS: 45000,
+        bufferCommands: false, // Disable buffering to fail fast if not connected
     };
 
     const cloudURI = process.env.MONGO_URI;

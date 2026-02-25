@@ -7,6 +7,7 @@ const JobCard = dynamic(() => import('@/components/JobCard'), {
     loading: () => <div style={{ height: '200px', background: '#f4f4f5', borderRadius: '12px', animation: 'pulse 2s infinite' }}></div>,
     ssr: false,
 });
+import { useSearchParams } from 'next/navigation';
 import api from '@/utils/api';
 import { Search, MapPin, Loader2 } from 'lucide-react';
 
@@ -19,17 +20,29 @@ interface SearchParams {
 }
 
 export default function JobsPageClient() {
+    const searchParams = useSearchParams();
     const [jobs, setJobs] = useState<any[]>([]);
     const [total, setTotal] = useState(0);
     const [pages, setPages] = useState(1);
     const [loading, setLoading] = useState(true);
-    const [params, setParams] = useState<SearchParams>({
-        keyword: '',
-        location: '',
-        types: [],
-        sort: 'newest',
-        page: 1,
+
+    // Initialize state from URL Params
+    const [params, setParams] = useState<SearchParams>(() => {
+        const typeParam = searchParams.get('type');
+        return {
+            keyword: searchParams.get('keyword') || '',
+            location: searchParams.get('location') || '',
+            types: typeParam ? [typeParam] : [],
+            sort: searchParams.get('sort') || 'newest',
+            page: parseInt(searchParams.get('page') || '1'),
+        };
     });
+
+    // Sync input refs with initial params
+    useEffect(() => {
+        if (keywordRef.current) keywordRef.current.value = params.keyword;
+        if (locationRef.current) locationRef.current.value = params.location;
+    }, []);
 
     // Input refs for the search bar
     const keywordRef = useRef<HTMLInputElement>(null);

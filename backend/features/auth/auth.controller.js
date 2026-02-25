@@ -54,17 +54,10 @@ const generateRefreshToken = (id) => {
 // @route   POST /api/auth/signup
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
-    // PROXY MODE: If no secret key (Colleague), forward request to Deployed Backend
-    if (!process.env.JWT_SECRET) {
-        console.log('⚡ Proxying Registration to Deployed Backend...');
-        try {
-            const response = await axios.post(`${AUTH_SERVER_URL}/signup`, req.body);
-            return res.status(response.status).json(response.data);
-        } catch (error) {
-            console.error('Remote Register Failed:', error.message);
-            res.status(error.response?.status || 500);
-            throw new Error(error.response?.data?.message || 'Remote Registration Failed');
-        }
+    // Validation: Ensure JWT_SECRET is set for security
+    if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+        res.status(500);
+        throw new Error('Server misconfiguration: JWT_SECRET is missing');
     }
 
     let { name, email, password, role } = req.body;
@@ -143,17 +136,10 @@ const registerUser = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 const loginUser = asyncHandler(async (req, res) => {
-    // PROXY MODE: If no secret key (Colleague), forward request to Deployed Backend
-    if (!process.env.JWT_SECRET) {
-        console.log('⚡ Proxying Login to Deployed Backend...');
-        try {
-            const response = await axios.post(`${AUTH_SERVER_URL}/login`, req.body);
-            return res.status(response.status).json(response.data);
-        } catch (error) {
-            console.error('Remote Login Failed:', error.message);
-            res.status(error.response?.status || 401);
-            throw new Error(error.response?.data?.message || 'Remote Login Failed');
-        }
+    // Validation: Ensure JWT_SECRET is set
+    if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+        res.status(500);
+        throw new Error('Server misconfiguration: JWT_SECRET is missing');
     }
 
     let { email, password } = req.body;

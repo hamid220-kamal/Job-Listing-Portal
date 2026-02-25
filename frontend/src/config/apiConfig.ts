@@ -8,7 +8,8 @@
 const FALLBACK_API = 'https://job-listing-portal-ten-omega.vercel.app/api';
 const FALLBACK_SITE = 'https://job-listing-portal-ten-omega.vercel.app';
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || FALLBACK_API;
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ||
+    (typeof window !== 'undefined' ? `${window.location.origin}/api` : FALLBACK_API);
 
 // The root URL of the backend server (for static files/uploads)
 export const BACKEND_URL = API_URL.replace('/api', '');

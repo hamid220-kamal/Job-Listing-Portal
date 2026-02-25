@@ -8,16 +8,19 @@
 const FALLBACK_API = 'https://job-listing-portal-ten-omega.vercel.app/api';
 const FALLBACK_SITE = 'https://job-listing-portal-ten-omega.vercel.app';
 
-export const API_URL = '/api';
+// In the browser, we use the relative /api to benefit from Next.js rewrites (no CORS issues).
+// On the server (SSR/RSC/Sitemap), we MUST use an absolute URL because fetch() doesn't know about relative paths.
+export const API_URL = typeof window !== 'undefined'
+    ? '/api'
+    : (process.env.NEXT_PUBLIC_API_URL || FALLBACK_API);
 
 // The root URL of the backend server (for static files/uploads)
 export const BACKEND_URL = API_URL.replace('/api', '');
 
-// The root URL of the frontend website
-// Dynamically determine the site URL in the browser, otherwise use fallback
-export const SITE_URL = typeof window !== 'undefined'
+// The root URL of the frontend website (no trailing slash)
+export const SITE_URL = (typeof window !== 'undefined'
     ? window.location.origin
-    : (process.env.NEXT_PUBLIC_SITE_URL || FALLBACK_SITE);
+    : (process.env.NEXT_PUBLIC_SITE_URL || FALLBACK_SITE)).replace(/\/$/, '');
 
 export default {
     API_URL,

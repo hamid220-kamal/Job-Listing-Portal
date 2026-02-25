@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import s from '../../../dashboard/profile.module.css';
 import Link from 'next/link';
 import Button from '@/components/Button';
-import { Building2, MapPin, Globe, Mail, Phone, Users, Briefcase, ExternalLink, Linkedin, Twitter, Facebook } from 'lucide-react';
+import { Building2, MapPin, Globe, Mail, Phone, Users, Briefcase, ExternalLink, Linkedin, Twitter, Facebook, LayoutDashboard } from 'lucide-react';
 
 interface Profile {
     _id: string; name: string; email: string; phone: string;
@@ -92,11 +92,18 @@ export default function EmployerProfileClient({ profile: initialProfile, id }: {
                         </div>
                     </div>
                     {isOwnProfile && (
-                        <Link href="/dashboard/employer/profile">
-                            <Button variant="secondary" style={{ backdropFilter: 'blur(8px)', background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}>
-                                Edit Company Profile
-                            </Button>
-                        </Link>
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            <Link href="/dashboard/employer">
+                                <Button style={{ background: '#2563eb', color: '#fff', border: 'none', gap: '0.5rem' }}>
+                                    <LayoutDashboard size={18} /> Dashboard
+                                </Button>
+                            </Link>
+                            <Link href="/dashboard/employer/profile">
+                                <Button variant="secondary" style={{ backdropFilter: 'blur(8px)', background: 'rgba(255,255,255,0.1)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)' }}>
+                                    Edit Company Profile
+                                </Button>
+                            </Link>
+                        </div>
                     )}
                 </div>
             </motion.div>

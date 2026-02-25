@@ -4,31 +4,41 @@ import Input from './Input';
 export default function JobFilter() {
     return (
         <div style={{
-            backgroundColor: 'var(--background)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius)',
-            padding: '1.5rem',
+            backgroundColor: 'white',
+            border: '1px solid #e2e8f0',
+            borderRadius: '20px',
+            padding: '2rem',
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '1rem',
-            alignItems: 'end',
-            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '1.25rem',
+            alignItems: 'center',
+            boxShadow: '0 20px 40px -10px rgba(0, 0, 0, 0.05)',
+            position: 'relative',
+            zIndex: 10
         }}>
-            <Input placeholder="Job title or keyword" icon={<span>🔍</span>} />
-            <Input placeholder="Location (e.g. Remote)" icon={<span>📍</span>} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>What</span>
+                <Input placeholder="Job title or keyword" icon={<span>🔍</span>} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Where</span>
+                <Input placeholder="Location (e.g. Remote)" icon={<span>📍</span>} />
+            </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Type</span>
                 <select style={{
-                    height: '2.5rem',
+                    height: '2.75rem',
                     width: '100%',
                     borderRadius: 'var(--radius)',
-                    border: '1px solid var(--border)',
+                    border: '1px solid #e2e8f0',
                     padding: '0 0.75rem',
-                    backgroundColor: 'transparent',
+                    backgroundColor: '#f8fafc',
                     fontSize: '0.875rem',
-                    color: 'var(--foreground)'
+                    color: '#1e293b',
+                    fontWeight: 500
                 }}>
-                    <option value="">Job Type</option>
+                    <option value="">Any Type</option>
                     <option value="full-time">Full-time</option>
                     <option value="part-time">Part-time</option>
                     <option value="contract">Contract</option>
@@ -36,9 +46,12 @@ export default function JobFilter() {
                 </select>
             </div>
 
-            <Button variant="primary" style={{ width: '100%' }}>
-                Search Jobs
-            </Button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <span style={{ opacity: 0, fontSize: '0.8rem' }}>Search</span>
+                <Button variant="primary" style={{ height: '2.75rem', width: '100%', borderRadius: '12px' }}>
+                    Find Jobs
+                </Button>
+            </div>
         </div>
     );
 }

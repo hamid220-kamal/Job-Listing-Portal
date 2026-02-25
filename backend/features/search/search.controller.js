@@ -1,8 +1,8 @@
 ﻿const Job = require('../jobs/job.model');
+const User = require('../auth/user.model');
 
 // @desc    Search jobs with filters
-// @route   GET /api/search
-// @access  Public
+// ... (searchJobs remains same)
 const searchJobs = async (req, res) => {
     try {
         const { keyword, location, type, sort, page = 1, limit = 20 } = req.query;
@@ -56,4 +56,36 @@ const searchJobs = async (req, res) => {
     }
 };
 
-module.exports = { searchJobs };
+// @desc    Get all company profiles (Employers)
+// @route   GET /api/search/companies
+// @access  Public
+const getCompanies = async (req, res) => {
+    try {
+        // Find all employers who have a company name
+        const employers = await User.find({
+            role: 'employer',
+            company: { $exists: true, $ne: '' }
+        })
+            .select('name company logo industry companyDescription website location')
+            .lean();
+
+        // Get job counts for these employers
+        const companyData = await Promise.all(employers.map(async (emp) => {
+            const count = await Job.countDocuments({
+                postedBy: emp._id,
+                status: 'active'
+            });
+            return {
+                ...emp,
+                activeJobsCount: count
+            };
+        }));
+
+        res.json(companyData);
+    } catch (err) {
+        console.error('getCompanies error:', err);
+        res.status(500).json({ message: 'Could not fetch companies. Please try again.' });
+    }
+};
+
+module.exports = { searchJobs, getCompanies };

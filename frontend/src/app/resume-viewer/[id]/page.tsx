@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import api from '@/utils/api';
+import { API_URL } from '@/config/apiConfig';
 import Button from '@/components/Button';
 import { Download, ChevronLeft, FileText, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -24,9 +25,8 @@ export default function ResumeViewerPage() {
             try {
                 const { data } = await api.get(`/profile/${id}`);
                 if (data.resume) {
-                    // Derive backend base URL from API_URL
-                    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-                    const baseUrl = apiUrl.replace('/api', '');
+                    // Use centralized API configuration
+                    const baseUrl = API_URL.replace('/api', '');
 
                     const fullUrl = data.resume.startsWith('http')
                         ? data.resume

@@ -83,27 +83,27 @@ export default function Home() {
     <div style={{ display: 'flex', flexDirection: 'column', overflowX: 'hidden', background: 'var(--background)' }}>
 
       {/* --- HERO SECTION --- */}
-      <section style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', paddingTop: '80px', overflow: 'hidden' }}>
+      <section style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', paddingTop: '80px', overflow: 'hidden', background: 'white' }}>
 
-        {/* Tech Mesh Background */}
+        {/* Tech Mesh Background - Subtler for light theme */}
         <div style={{
           position: 'absolute', inset: 0, zIndex: 0,
-          backgroundImage: `radial-gradient(#e5e7eb 1px, transparent 1px)`,
-          backgroundSize: '40px 40px',
-          maskImage: 'radial-gradient(circle at center, black 40%, transparent 80%)',
-          opacity: 0.5
+          backgroundImage: `radial-gradient(#e2e8f0 1.5px, transparent 1.5px)`,
+          backgroundSize: '48px 48px',
+          maskImage: 'radial-gradient(circle at center, black 30%, transparent 90%)',
+          opacity: 0.4
         }} />
 
-        {/* Gradient Orbs */}
+        {/* Gradient Orbs - Optimized for Light Theme */}
         <motion.div
-          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 10, repeat: Infinity }}
-          style={{ position: 'absolute', top: '10%', right: '10%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(37,99,235,0.2), transparent 70%)', filter: 'blur(60px)' }}
+          animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
+          transition={{ duration: 15, repeat: Infinity }}
+          style={{ position: 'absolute', top: '-10%', right: '5%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(59,130,246,0.15), transparent 70%)', filter: 'blur(80px)' }}
         />
         <motion.div
-          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 8, repeat: Infinity, delay: 2 }}
-          style={{ position: 'absolute', bottom: '10%', left: '10%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(147,51,234,0.15), transparent 70%)', filter: 'blur(60px)' }}
+          animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.3, 0.15] }}
+          transition={{ duration: 20, repeat: Infinity, delay: 5 }}
+          style={{ position: 'absolute', bottom: '0%', left: '-5%', width: '700px', height: '700px', background: 'radial-gradient(circle, rgba(99,102,241,0.1), transparent 70%)', filter: 'blur(100px)' }}
         />
 
         <div className="container" style={{ position: 'relative', zIndex: 1 }}>
@@ -114,17 +114,17 @@ export default function Home() {
               initial={{ y: -50, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ type: "spring", bounce: 0.5 }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '99px', background: 'rgba(255,255,255,0.8)', border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', marginBottom: '2rem' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '99px', background: '#f1f5f9', border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', marginBottom: '2rem' }}
             >
               <div style={{ width: '8px', height: '8px', background: '#22c55e', borderRadius: '50%' }} />
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#18181b' }}>Over 12,000+ New Jobs Added Today</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569' }}>Over 12,000+ New Jobs Added Today</span>
             </motion.div>
 
             {/* Headline */}
-            <motion.h1 style={{ fontSize: 'clamp(3rem, 7vw, 5.5rem)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-0.03em', marginBottom: '1.5rem', color: '#09090b' }}>
+            <motion.h1 style={{ fontSize: 'clamp(3rem, 7vw, 5.5rem)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-0.04em', marginBottom: '1.5rem', color: '#0f172a' }}>
               Find a job that <br className="mobile-hide" />
               <span style={{
-                background: 'linear-gradient(135deg, #18181b 0%, #52525b 100%)',
+                background: 'linear-gradient(135deg, #1e293b 0%, #3b82f6 100%)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
               }}>matches your passion.</span>
             </motion.h1>
@@ -133,7 +133,7 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
-              style={{ fontSize: '1.25rem', color: '#52525b', marginBottom: '3rem', maxWidth: '650px', marginInline: 'auto', lineHeight: 1.6 }}
+              style={{ fontSize: '1.25rem', color: '#64748b', marginBottom: '3rem', maxWidth: '650px', marginInline: 'auto', lineHeight: 1.6 }}
             >
               The most advanced AI-powered platform designed to connect top-tier talent with world-class organizations.
             </motion.p>
@@ -146,12 +146,12 @@ export default function Home() {
             >
               <Link href="/jobs">
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  whileTap={{ scale: 0.98 }}
                   style={{
-                    padding: '1.25rem 3rem', borderRadius: '16px', background: '#18181b', color: 'white',
+                    padding: '1.25rem 3rem', borderRadius: '16px', background: '#2563eb', color: 'white',
                     fontSize: '1.1rem', fontWeight: 600, border: 'none', cursor: 'pointer',
-                    boxShadow: '0 20px 40px -10px rgba(0,0,0,0.3)'
+                    boxShadow: '0 20px 40px -10px rgba(37, 99, 235, 0.3)'
                   }}
                 >
                   Browse Jobs
@@ -159,11 +159,12 @@ export default function Home() {
               </Link>
               <Link href="/companies">
                 <motion.button
-                  whileHover={{ scale: 1.05, backgroundColor: '#f4f4f5' }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.02, backgroundColor: '#f8fafc' }}
+                  whileTap={{ scale: 0.98 }}
                   style={{
-                    padding: '1.25rem 3rem', borderRadius: '16px', background: 'white', color: '#18181b',
-                    fontSize: '1.1rem', fontWeight: 600, border: '1px solid #e4e4e7', cursor: 'pointer'
+                    padding: '1.25rem 3rem', borderRadius: '16px', background: 'white', color: '#1e293b',
+                    fontSize: '1.1rem', fontWeight: 600, border: '1px solid #e2e8f0', cursor: 'pointer',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
                   }}
                 >
                   View Companies
@@ -185,22 +186,93 @@ export default function Home() {
       </section>
 
       {/* --- TRUSTED BRANDS --- */}
-      <section style={{ padding: '3rem 0', background: 'white', borderBottom: '1px solid #e4e4e7' }}>
-        <p style={{ textAlign: 'center', color: '#71717a', fontSize: '0.9rem', fontWeight: 600, marginBottom: '2rem', letterSpacing: '0.05em' }}>TRUSTED BY TEAM AT WORLD'S BEST COMPANIES</p>
+      <section style={{ padding: '3rem 0', background: 'white', borderBottom: '1px solid #f1f5f9' }}>
+        <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem', fontWeight: 700, marginBottom: '2rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Trusted by teams at world's best companies</p>
         <InfiniteMarquee>
           {['MICROSOFT', 'GOOGLE', 'AMAZON', 'NETFLIX', 'SPOTIFY', 'META', 'APPLE', 'TESLA', 'OPENAI', 'STRIPE', 'AIRBNB', 'UBER'].map((brand, i) => (
-            <span key={i} style={{ fontSize: '2rem', fontWeight: 800, color: '#d4d4d8', letterSpacing: '-0.02em', margin: '0 2rem' }}>{brand}</span>
+            <span key={i} style={{ fontSize: '1.75rem', fontWeight: 800, color: '#e2e8f0', letterSpacing: '-0.02em', margin: '0 3rem' }}>{brand}</span>
           ))}
         </InfiniteMarquee>
+      </section>
+
+      {/* --- WHY CHOOSE US --- */}
+      <section className="container" style={{ padding: '8rem 1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <h2 style={{ fontSize: '3.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '2rem', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+              Why top professionals <br />
+              <span style={{ color: '#2563eb' }}>choose our platform.</span>
+            </h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+              {[
+                { title: 'AI-Powered Matching', desc: 'Our advanced algorithms match you with roles that truly fit your skills and career trajectory.', icon: Zap },
+                { title: 'Direct Access', desc: 'Skip the noise and connect directly with hiring managers at world-class companies.', icon: Users },
+                { title: 'Salary Transparency', desc: 'Make informed decisions with upfront salary expectations and market insights.', icon: TrendingUp }
+              ].map((item, i) => (
+                <div key={i} style={{ display: 'flex', gap: '1.5rem' }}>
+                  <div style={{ minWidth: '48px', height: '48px', borderRadius: '12px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
+                    <item.icon size={22} />
+                  </div>
+                  <div>
+                    <h4 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>{item.title}</h4>
+                    <p style={{ color: '#64748b', lineHeight: 1.6, fontSize: '1.05rem' }}>{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8 }}
+            style={{ position: 'relative' }}
+          >
+            <div style={{
+              width: '100%', aspectRatio: '1/1', background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
+              borderRadius: '32px', overflow: 'hidden', position: 'relative', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)'
+            }}>
+              <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop"
+                alt="Engagement" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
+            </div>
+            {/* Floating Stats */}
+            <motion.div
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              style={{
+                position: 'absolute', top: '10%', right: '-5%', background: 'white', padding: '1.5rem',
+                borderRadius: '20px', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', border: '1px solid #f1f5f9'
+              }}
+            >
+              <div style={{ color: '#2563eb', fontWeight: 800, fontSize: '1.5rem' }}>92%</div>
+              <div style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 700 }}>MATCH RATE</div>
+            </motion.div>
+            <motion.div
+              animate={{ y: [0, 10, 0] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+              style={{
+                position: 'absolute', bottom: '10%', left: '-5%', background: 'white', padding: '1.5rem',
+                borderRadius: '20px', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', border: '1px solid #f1f5f9'
+              }}
+            >
+              <div style={{ color: '#10b981', fontWeight: 800, fontSize: '1.5rem' }}>10k+</div>
+              <div style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 700 }}>SUCCESSFUL HIRES</div>
+            </motion.div>
+          </motion.div>
+        </div>
       </section>
 
       {/* --- CATEGORIES --- */}
       <section className="container" style={{ padding: '8rem 1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', marginBottom: '4rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h2 style={{ fontSize: '3rem', fontWeight: 800, color: '#18181b', lineHeight: 1 }}>Explore by <br /><span style={{ color: '#9333ea' }}>Category</span></h2>
+            <h2 style={{ fontSize: '3rem', fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>Explore by <br /><span style={{ color: '#2563eb' }}>Category</span></h2>
           </div>
-          <Link href="/categories" style={{ color: '#18181b', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Link href="/categories" style={{ color: '#2563eb', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             View All Categories <ArrowRight size={18} />
           </Link>
         </div>
@@ -216,50 +288,50 @@ export default function Home() {
           ].map((cat, i) => (
             <motion.div
               key={cat.name}
-              whileHover={{ y: -5, boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}
+              whileHover={{ y: -5, boxShadow: '0 20px 40px rgba(0,0,0,0.05)', borderColor: '#2563eb' }}
               style={{
-                padding: '2rem', borderRadius: '20px', background: 'white', border: '1px solid #e4e4e7',
-                cursor: 'pointer', transition: 'all 0.2s'
+                padding: '2rem', borderRadius: '24px', background: 'white', border: '1px solid #e2e8f0',
+                cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
               }}
             >
-              <div style={{ width: '50px', height: '50px', background: '#fafafa', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem', color: '#18181b' }}>
-                <cat.icon size={24} />
+              <div style={{ width: '56px', height: '56px', background: '#f1f5f9', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem', color: '#2563eb' }}>
+                <cat.icon size={26} />
               </div>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem', color: '#18181b' }}>{cat.name}</h3>
-              <p style={{ color: '#71717a', fontSize: '0.9rem' }}>{cat.count}</p>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '0.5rem', color: '#1e293b' }}>{cat.name}</h3>
+              <p style={{ color: '#64748b', fontSize: '0.95rem' }}>{cat.count}</p>
             </motion.div>
           ))}
         </div>
       </section>
 
-      {/* --- HOW IT WORKS (Dark Mode) --- */}
-      <section style={{ padding: 'var(--section-padding) 0', background: '#09090b', color: 'white', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'rgba(255,255,255,0.1)' }} />
+      {/* --- HOW IT WORKS (Light Mode) --- */}
+      <section style={{ padding: '10rem 0', background: '#f8fafc', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'rgba(0,0,0,0.05)' }} />
 
         <div className="container">
           <div style={{ textAlign: 'center', marginBottom: '6rem' }}>
-            <h2 style={{ fontSize: '3rem', fontWeight: 800, marginBottom: '1rem' }}>How it Works</h2>
-            <p style={{ color: '#a1a1aa', fontSize: '1.1rem' }}>Your journey to a better career starts here.</p>
+            <h2 style={{ fontSize: '3rem', fontWeight: 800, marginBottom: '1rem', color: '#0f172a' }}>Standard Recruitment Process</h2>
+            <p style={{ color: '#64748b', fontSize: '1.2rem' }}>Experience a seamless journey from browsing to joining your dream team.</p>
           </div>
 
-          <div className="steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '4rem' }}>
+          <div className="steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '3rem' }}>
             {[
-              { title: 'Create Account', desc: 'Sign up in seconds and build your professional profile.', icon: Users },
-              { title: 'Upload Resume', desc: 'Our AI parses your resume to match you with the best roles.', icon: Briefcase },
-              { title: 'Get Hired', desc: 'Connect directly with hiring managers and land the job.', icon: CheckCircle }
+              { title: 'Create Account', desc: 'Sign up in seconds and build your professional profile to showcase your skills.', icon: Users, color: '#2563eb' },
+              { title: 'Upload Resume', desc: 'Our smart AI parses your resume to match you with roles that fit your expertise.', icon: Briefcase, color: '#8b5cf6' },
+              { title: 'Get Hired', desc: 'Connect directly with hiring managers, ace your interview, and land the job.', icon: CheckCircle, color: '#10b981' }
             ].map((step, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.2 }}
-                style={{ background: 'rgba(255,255,255,0.03)', padding: '3rem 2rem', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}
+                style={{ background: 'white', padding: '3.5rem 2.5rem', borderRadius: '24px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)' }}
               >
-                <div style={{ width: '60px', height: '60px', background: 'linear-gradient(135deg, #2563eb, #7c3aed)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2rem' }}>
-                  <step.icon size={28} color="white" />
+                <div style={{ width: '70px', height: '70px', background: `${step.color}15`, borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2.5rem' }}>
+                  <step.icon size={32} color={step.color} />
                 </div>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem' }}>{step.title}</h3>
-                <p style={{ color: '#a1a1aa', lineHeight: 1.6 }}>{step.desc}</p>
+                <h3 style={{ fontSize: '1.6rem', fontWeight: 700, marginBottom: '1.25rem', color: '#1e293b' }}>{step.title}</h3>
+                <p style={{ color: '#64748b', lineHeight: 1.7, fontSize: '1.05rem' }}>{step.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -268,20 +340,20 @@ export default function Home() {
 
       {/* --- TRENDING JOBS --- */}
       <section className="container" style={{ padding: '8rem 1.5rem' }}>
-        <div style={{ marginBottom: '4rem', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '3rem', fontWeight: 800, marginBottom: '1rem', color: '#18181b' }}>Trending Opportunities</h2>
-          <p style={{ color: '#71717a', fontSize: '1.1rem' }}>Hand-picked jobs from top companies.</p>
+        <div style={{ marginBottom: '5rem', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '3.5rem', fontWeight: 800, marginBottom: '1.25rem', color: '#0f172a', letterSpacing: '-0.02em' }}>Trending Opportunities</h2>
+          <p style={{ color: '#64748b', fontSize: '1.25rem' }}>Hand-picked jobs from global industry leaders.</p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '2.5rem' }}>
           {MOCK_JOBS.slice(0, 6).map((job, i) => (
             <TiltCard key={job.id}>
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -5 }}
-                style={{ background: 'white', borderRadius: '24px', overflow: 'hidden', height: '100%', border: '1px solid #e4e4e7', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' }}
+                whileHover={{ y: -8 }}
+                style={{ height: '100%' }}
               >
                 <JobCard {...job} />
               </motion.div>
@@ -289,19 +361,19 @@ export default function Home() {
           ))}
         </div>
 
-        <div style={{ marginTop: '4rem', textAlign: 'center' }}>
+        <div style={{ marginTop: '5rem', textAlign: 'center' }}>
           <Link href="/jobs">
-            <Button variant="outline" size="lg">View All Jobs</Button>
+            <Button variant="outline" size="lg" style={{ borderRadius: '14px', padding: '1rem 3rem', fontWeight: 700 }}>View All Opportunities</Button>
           </Link>
         </div>
       </section>
 
       {/* --- STATS PARALLAX --- */}
-      <section style={{ position: 'relative', padding: '10rem 0', overflow: 'hidden', background: '#18181b', color: 'white' }}>
-        <div style={{ position: 'absolute', inset: 0, opacity: 0.2 }}>
+      <section style={{ position: 'relative', padding: '10rem 0', overflow: 'hidden', background: '#0f172a', color: 'white' }}>
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.1 }}>
           <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop" alt="stats-bg" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, #18181b, transparent, #18181b)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, #0f172a, transparent, #0f172a)' }} />
 
         <div className="container" style={{ position: 'relative', zIndex: 10 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '4rem', textAlign: 'center' }}>
@@ -312,10 +384,10 @@ export default function Home() {
               { label: 'Candidates', value: 120000 }
             ].map((stat, i) => (
               <div key={i}>
-                <div style={{ fontSize: '4rem', fontWeight: 800, marginBottom: '0.5rem', background: 'linear-gradient(to bottom, #ffffff, #9ca3af)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                <div style={{ fontSize: '4rem', fontWeight: 800, marginBottom: '0.5rem', background: 'linear-gradient(to bottom, #ffffff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                   <CountUp to={stat.value} />+
                 </div>
-                <div style={{ color: '#d4d4d8', fontSize: '1.1rem', fontWeight: 500 }}>{stat.label}</div>
+                <div style={{ color: '#94a3b8', fontSize: '1.2rem', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{stat.label}</div>
               </div>
             ))}
           </div>
@@ -323,10 +395,10 @@ export default function Home() {
       </section>
 
       {/* --- FAQ SECTION --- */}
-      <section className="container" style={{ padding: '8rem 1.5rem', maxWidth: '900px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-          <h2 style={{ fontSize: '3rem', fontWeight: 800, color: '#18181b' }}>Common Questions</h2>
-          <p style={{ color: '#71717a', marginTop: '1rem', fontSize: '1.1rem' }}>Everything you need to know about the platform.</p>
+      <section className="container" style={{ padding: '10rem 1.5rem', maxWidth: '1000px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '5rem' }}>
+          <h2 style={{ fontSize: '3.5rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>Common Questions</h2>
+          <p style={{ color: '#64748b', marginTop: '1.25rem', fontSize: '1.2rem' }}>Everything you need to know about the platform.</p>
         </div>
         <FAQAccordion items={[
           { q: "Is this platform really free for job seekers?", a: "Yes, completely. You can create a profile, upload your resume, and apply to as many jobs as you want without paying a dime." },
@@ -337,14 +409,23 @@ export default function Home() {
       </section>
 
       {/* --- CTA SECTION --- */}
-      <section style={{ padding: '6rem 0', background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)', color: 'white', textAlign: 'center' }}>
-        <div className="container">
-          <h2 style={{ fontSize: '3rem', fontWeight: 800, marginBottom: '1.5rem' }}>Ready to shape your future?</h2>
-          <p style={{ fontSize: '1.25rem', opacity: 0.9, marginBottom: '3rem', maxWidth: '600px', margin: '0 auto 3rem' }}>Join over 100,000 professionals who have found their dream job using our platform.</p>
+      <section style={{ padding: '8rem 0', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', color: 'white', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        <div style={{
+          position: 'absolute', inset: 0, opacity: 0.1,
+          backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+          backgroundSize: '32px 32px'
+        }} />
+        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+          <h2 style={{ fontSize: '3.5rem', fontWeight: 800, marginBottom: '1.5rem', letterSpacing: '-0.02em' }}>Ready to shape your future?</h2>
+          <p style={{ fontSize: '1.4rem', opacity: 0.8, marginBottom: '3.5rem', maxWidth: '700px', margin: '0 auto 3.5rem', lineHeight: 1.6 }}>Join over 100,000 professionals who have found their dream job using our platform.</p>
           <Link href="/auth/signup">
-            <button style={{ padding: '1.25rem 3.5rem', background: 'white', color: '#2563eb', border: 'none', borderRadius: '99px', fontSize: '1.1rem', fontWeight: 700, cursor: 'pointer', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+            <motion.button
+              whileHover={{ scale: 1.05, boxShadow: '0 20px 40px rgba(37, 99, 235, 0.3)' }}
+              whileTap={{ scale: 0.95 }}
+              style={{ padding: '1.5rem 4rem', background: '#2563eb', color: 'white', border: 'none', borderRadius: '16px', fontSize: '1.25rem', fontWeight: 700, cursor: 'pointer' }}
+            >
               Get Started Now
-            </button>
+            </motion.button>
           </Link>
         </div>
       </section>

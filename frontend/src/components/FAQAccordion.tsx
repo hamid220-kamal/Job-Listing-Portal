@@ -57,7 +57,7 @@ export default function FAQAccordion({ items }: { items: { q: string, a: string 
     const [openIndex, setOpenIndex] = useState<number | null>(0);
 
     return (
-        <div style={{ background: 'white', borderRadius: '24px', padding: '2rem', boxShadow: '0 4px 6px rgba(0,0,0,0.02)', border: '1px solid #e4e4e7' }}>
+        <div style={{ background: 'white', borderRadius: '32px', padding: '3rem', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
             {items.map((item, i) => (
                 <AccordionItem
                     key={i}

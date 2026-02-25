@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence, useScroll, useMotionValueEvent, useMotionTemplate, useMotionValue, useSpring, useTransform, Variants } from 'framer-motion';
 import Button from './Button';
-import { Search, Bell, Menu, X, Globe, Zap, Briefcase } from 'lucide-react';
+import { Search, Bell, Menu, X, Globe, Zap, Briefcase, LayoutDashboard } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const navLinks = [

@@ -8,7 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 
 const baseNavItems = [
     { name: 'Home', href: '/', icon: Home },
-    { name: 'Jobs', href: '/jobs?type=Full-time', icon: Briefcase },
+    { name: 'Jobs', href: '/jobs', icon: Briefcase },
     { name: 'Companies', href: '/companies', icon: Building2 },
 ];
 

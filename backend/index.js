@@ -97,31 +97,30 @@ app.use(cookieParser()); // Cookie parser for HTTP-only cookies
 // Database Connection Middleware - Ensures DB is ready before any route is processed
 // This is critical when 'bufferCommands: false' is used to prevent race conditions
 app.use(async (req, res, next) => {
-    // If connection is already established (1), continue
-    if (mongoose.connection.readyState === 1) {
-        return next();
-    }
+    try {
+        // If connection is already established (1), continue
+        if (mongoose.connection.readyState === 1) {
+            return next();
+        }
 
-    // If connection is disconnected (0) or erroring, try to reconnect
-    if (mongoose.connection.readyState === 0 || mongoose.connection.readyState === 3) {
-        console.log('🔄 Database disconnected. Attempting to reconnect...');
-        await connectDB();
-    }
+        // If connection is disconnected (0) or erroring, try to reconnect
+        if (mongoose.connection.readyState === 0 || mongoose.connection.readyState === 3) {
+            console.log('🔄 Database disconnected. Attempting to reconnect...');
+            await connectDB();
+        }
 
-    // Wait for the connection to reach state 1 (connected)
-    // We poll briefly to avoid infinite loops if the connection is taking time
-    let attempts = 0;
-    while (mongoose.connection.readyState !== 1 && attempts < 10) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        attempts++;
-    }
+        // In serverless/production, we don't want to poll as it can cause timeouts.
+        // If connectDB() was called, it should have either succeeded or logged an error.
+        if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+            return next();
+        }
 
-    if (mongoose.connection.readyState === 1) {
-        next();
-    } else {
         res.status(503).json({
             message: 'Database connection is still pending. Please refresh in a moment.'
         });
+    } catch (err) {
+        console.error('DB Middleware Error:', err);
+        next(err);
     }
 });
 

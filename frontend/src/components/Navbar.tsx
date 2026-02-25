@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 
 const navLinks = [
     { name: 'Home', href: '/' },
-    { name: 'Jobs', href: '/jobs?type=Full-time' },
+    { name: 'Jobs', href: '/jobs' },
     { name: 'Companies', href: '/companies' },
 ];
 

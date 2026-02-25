@@ -6,20 +6,30 @@ const User = require('../auth/user.model');
 const searchJobs = async (req, res) => {
     try {
         const { keyword, location, type, sort, page = 1, limit = 20 } = req.query;
-        const query = { status: 'active' };
+        // Robust query for active or legacy jobs
+        const query = {
+            $or: [
+                { status: 'active' },
+                { status: { $exists: false } },
+                { status: null },
+                { status: '' }
+            ]
+        };
+
+        console.log('Search Query:', JSON.stringify(query));
 
         // Keyword search — matches title, company, or description using Text Index
-        if (keyword && keyword.trim()) {
+        if (keyword && typeof keyword === 'string' && keyword.trim()) {
             query.$text = { $search: keyword.trim() };
         }
 
         // Location filter (case-insensitive partial match)
-        if (location && location.trim()) {
+        if (location && typeof location === 'string' && location.trim()) {
             query.location = { $regex: location.trim(), $options: 'i' };
         }
 
         // Job type filter — can be comma-separated (e.g., "Full-time,Part-time")
-        if (type && type.trim()) {
+        if (type && typeof type === 'string' && type.trim()) {
             const types = type.split(',').map(t => t.trim()).filter(Boolean);
             if (types.length > 0) {
                 query.type = { $in: types };
@@ -31,24 +41,30 @@ const searchJobs = async (req, res) => {
         if (sort === 'oldest') sortOption = { createdAt: 1 };
         if (sort === 'title') sortOption = { title: 1 };
 
-        // Pagination
-        const skip = (parseInt(page) - 1) * parseInt(limit);
+        // Pagination parameters
+        const pageNum = Math.max(1, parseInt(page) || 1);
+        const limitNum = Math.max(1, parseInt(limit) || 20);
+        const skip = (pageNum - 1) * limitNum;
 
         const [jobs, total] = await Promise.all([
             Job.find(query)
                 .populate('postedBy', 'name company avatar')
                 .sort(sortOption)
                 .skip(skip)
-                .limit(parseInt(limit))
+                .limit(limitNum)
                 .lean(),
             Job.countDocuments(query),
         ]);
 
         res.json({
-            jobs,
+            jobs: jobs.map(j => ({
+                ...j,
+                id: j._id,
+                postedAt: j.createdAt ? new Date(j.createdAt).toLocaleDateString() : 'Just now'
+            })),
             total,
-            page: parseInt(page),
-            pages: Math.ceil(total / parseInt(limit)),
+            page: pageNum,
+            pages: Math.ceil(total / limitNum),
         });
     } catch (err) {
         console.error('searchJobs error:', err);

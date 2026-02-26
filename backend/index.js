@@ -99,19 +99,14 @@ app.use(cookieParser()); // Cookie parser for HTTP-only cookies
 app.use(async (req, res, next) => {
     try {
         // If connection is already established (1), continue
-        if (mongoose.connection.readyState === 1) {
-            return next();
-        }
-
-        // If connection is disconnected (0) or erroring, try to reconnect
-        if (mongoose.connection.readyState === 0 || mongoose.connection.readyState === 3) {
-            console.log('🔄 Database disconnected. Attempting to reconnect...');
+        // If connection is not established, wait for it
+        if (mongoose.connection.readyState !== 1) {
+            console.log(`🔄 Database state is ${mongoose.connection.readyState}. Waiting for connection...`);
             await connectDB();
         }
 
-        // In serverless/production, we don't want to poll as it can cause timeouts.
-        // If connectDB() was called, it should have either succeeded or logged an error.
-        if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+        // If connection is now established, continue
+        if (mongoose.connection.readyState === 1) {
             return next();
         }
 

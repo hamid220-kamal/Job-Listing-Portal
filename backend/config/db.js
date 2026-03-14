@@ -1,4 +1,13 @@
 const mongoose = require('mongoose');
+const fs = require('fs');
+const path = require('path');
+
+const logFile = path.join(__dirname, '..', 'debug.log');
+const log = (msg) => {
+    const timestamp = new Date().toISOString();
+    fs.appendFileSync(logFile, `[${timestamp}] ${msg}\n`);
+    console.log(msg);
+};
 
 let connectionPromise = null;
 
@@ -33,8 +42,10 @@ const connectDB = async () => {
     const connectToCloud = async (isForced = false) => {
         try {
             console.log(isForced ? '🌐 Forced Cloud Mode. Connecting to MongoDB Cloud (Atlas)...' : '🌐 Attempting to connect to MongoDB Cloud (Atlas)...');
+            if (typeof log !== 'undefined') log(isForced ? '🌐 Forced Cloud Mode. Connecting to MongoDB Cloud (Atlas)...' : '🌐 Attempting to connect to MongoDB Cloud (Atlas)...');
             const conn = await mongoose.connect(cloudURI, options);
             console.log(`✅ MongoDB Connected to Cloud: ${conn.connection.host}`);
+            if (typeof log !== 'undefined') log(`✅ MongoDB Connected to Cloud: ${conn.connection.host}`);
             return conn;
         } catch (error) {
             if (error.message.includes('ETIMEDOUT')) {
@@ -57,8 +68,10 @@ const connectDB = async () => {
     const connectToLocal = async (isForced = false) => {
         try {
             console.log(isForced ? '🏠 Forced Local Mode. Connecting to Local MongoDB...' : '🏠 Attempting fallback to Local MongoDB...');
+            if (typeof log !== 'undefined') log(isForced ? '🏠 Forced Local Mode. Connecting to Local MongoDB...' : '🏠 Attempting fallback to Local MongoDB...');
             const localConn = await mongoose.connect(localURI, options);
             console.log(`✅ MongoDB Connected Locally: ${localConn.connection.host}`);
+            if (typeof log !== 'undefined') log(`✅ MongoDB Connected Locally: ${localConn.connection.host}`);
             return localConn;
         } catch (error) {
             console.error(`❌ Local MongoDB Failed: ${error.message}`);

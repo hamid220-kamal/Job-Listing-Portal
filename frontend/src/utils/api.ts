@@ -24,7 +24,10 @@ api.interceptors.response.use(
         const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
         // If error is 401 (Unauthorized) and not already a retry and not a login/signup request
-        if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/login')) {
+        const isAuthRoute = ['/auth/login', '/auth/signup', '/auth/forgot-password'].some(
+            (path) => originalRequest.url?.includes(path)
+        );
+        if (error.response?.status === 401 && !originalRequest._retry && !isAuthRoute) {
             originalRequest._retry = true;
 
             try {

@@ -8,6 +8,13 @@ import api from '@/utils/api';
 import Button from '@/components/Button';
 import Link from 'next/link';
 import s from '../../profile.module.css';
+import { 
+    Building2, MapPin, Globe, Mail, Phone, Users, 
+    Link as LinkIcon, Plus, X, Upload, Save, Eye,
+    Sparkles, Linkedin, Twitter, Facebook, ExternalLink,
+    Briefcase, Info, Heart
+} from 'lucide-react';
+import toast from 'react-hot-toast';
 
 /* ─── Types ─── */
 interface LocationObj { city: string; state: string; country: string; }
@@ -22,8 +29,11 @@ interface ProfileForm {
     location: LocationObj;
 }
 
-const TABS = ['Company Details', 'Contact & Location', 'Online Presence'] as const;
-type Tab = typeof TABS[number];
+const TABS = [
+    { id: 'Company Details', icon: Building2 },
+    { id: 'Contact & Location', icon: MapPin },
+    { id: 'Online Presence', icon: Globe },
+] as const;
 
 const INDUSTRIES = ['Technology', 'Finance', 'Healthcare', 'Education', 'Retail', 'Manufacturing', 'Consulting', 'Media & Entertainment', 'Real Estate', 'Non-Profit', 'Other'];
 const SIZES = ['1-10', '11-50', '51-200', '201-500', '501-1000', '1000+'];
@@ -31,13 +41,13 @@ const SIZES = ['1-10', '11-50', '51-200', '201-500', '501-1000', '1000+'];
 export default function EmployerProfile() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
-    const [tab, setTab] = useState<Tab>('Company Details');
+    const [tab, setTab] = useState<typeof TABS[number]['id']>('Company Details');
     const [saving, setSaving] = useState(false);
     const [fetching, setFetching] = useState(true);
-    const [msg, setMsg] = useState({ ok: false, text: '' });
     const [benefitInput, setBenefitInput] = useState('');
     const [completeness, setCompleteness] = useState({ score: 0, missing: [] as string[] });
     const [uploadingLogo, setUploadingLogo] = useState(false);
+    
     const logoRef = useRef<HTMLInputElement>(null);
 
     const [form, setForm] = useState<ProfileForm>({
@@ -50,14 +60,12 @@ export default function EmployerProfile() {
         location: { city: '', state: '', country: '' },
     });
 
-    // Auth guard
     useEffect(() => {
         if (!authLoading && (!user || user.role !== 'employer')) {
             router.push(user ? '/dashboard/candidate' : '/auth/login');
         }
     }, [user, authLoading, router]);
 
-    // Load profile
     useEffect(() => {
         if (!user) return;
         (async () => {
@@ -78,348 +86,309 @@ export default function EmployerProfile() {
                     location: { city: '', state: '', country: '', ...data.location },
                 });
                 if (data.completeness) setCompleteness(data.completeness);
-            } catch (err) {
-                console.error('Error loading profile:', err);
             } finally {
                 setFetching(false);
             }
         })();
     }, [user]);
 
-    /* ─── Helpers ── */
-    const set = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const handleSet = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
-    }, []);
+    };
 
-    const setNested = useCallback((group: 'companySocialLinks' | 'location', key: string, val: string) => {
+    const handleNested = (group: 'companySocialLinks' | 'location', key: string, val: string) => {
         setForm(prev => ({ ...prev, [group]: { ...prev[group], [key]: val } }));
-    }, []);
+    };
 
-    const addBenefit = useCallback(() => {
-        const trimmed = benefitInput.trim();
-        if (trimmed && !form.companyBenefits.includes(trimmed) && form.companyBenefits.length < 30) {
-            setForm(prev => ({ ...prev, companyBenefits: [...prev.companyBenefits, trimmed] }));
-            setBenefitInput('');
-        }
-    }, [benefitInput, form.companyBenefits]);
-
-    const removeBenefit = useCallback((idx: number) => {
-        setForm(prev => ({ ...prev, companyBenefits: prev.companyBenefits.filter((_, i) => i !== idx) }));
-    }, []);
-
-    /* ─── Logo Upload ── */
     const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-
-        // Check file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            setMsg({ ok: false, text: 'Image is too large. Please use an image smaller than 5MB.' });
-            return;
-        }
-
         setUploadingLogo(true);
+        const fd = new FormData();
+        fd.append('logo', file);
         try {
-            const fd = new FormData();
-            fd.append('logo', file);
             const { data } = await api.post('/profile/upload-logo', fd);
             setForm(prev => ({ ...prev, logo: data.logo }));
-            setMsg({ ok: true, text: 'Logo uploaded successfully!' });
-        } catch (err: any) {
-            const serverMsg = err.response?.data?.message || '';
-            if (serverMsg.includes('file type')) {
-                setMsg({ ok: false, text: 'Please upload a JPG, PNG, or WebP image.' });
-            } else if (err.response?.status === 413) {
-                setMsg({ ok: false, text: 'Image is too large. Please use a smaller image.' });
-            } else {
-                setMsg({ ok: false, text: 'Could not upload logo. Please try again.' });
-            }
+            toast.success('Company logo updated');
+        } catch {
+            toast.error('Logo upload failed');
         } finally {
             setUploadingLogo(false);
         }
     };
 
-    /* ─── Save ── */
-    const save = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const save = async (e?: React.FormEvent) => {
+        e?.preventDefault();
         setSaving(true);
-        setMsg({ ok: false, text: '' });
         try {
-            const { data } = await api.put('/profile', {
-                name: form.name,
-                phone: form.phone,
-                company: form.company,
-                companyDescription: form.companyDescription,
-                industry: form.industry,
-                companySize: form.companySize,
-                website: form.website,
-                companyBenefits: form.companyBenefits,
-                companySocialLinks: form.companySocialLinks,
-                location: form.location,
-            });
+            const { data } = await api.put('/profile', form);
             if (data.completeness) setCompleteness(data.completeness);
-            setMsg({ ok: true, text: 'Profile saved successfully!' });
-        } catch (err: any) {
-            setMsg({ ok: false, text: err.response?.data?.message || 'Failed to save' });
+            toast.success('Organization profile updated');
+        } catch {
+            toast.error('Failed to sync changes');
         } finally {
             setSaving(false);
         }
     };
 
-    if (authLoading || !user || fetching) {
-        return (
-            <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <p style={{ color: 'var(--muted-foreground)' }}>Loading profile...</p>
-            </div>
-        );
+    if (authLoading || fetching || !user) {
+        return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}>
+                <div style={{ width: 40, height: 40, border: '4px solid #f1f5f9', borderTopColor: '#2563eb', borderRadius: '50%' }} />
+            </motion.div>
+        </div>;
     }
 
     const barColor = completeness.score < 40 ? '#ef4444' : completeness.score < 70 ? '#f59e0b' : '#10b981';
 
     return (
         <div className={s.container}>
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+                
                 {/* ── Header ── */}
                 <div className={s.header}>
                     <div className={s.avatarWrap}>
                         {form.logo ? (
-                            <img src={form.logo} alt="Logo" className={s.avatar}
-                                style={{ borderRadius: 'var(--radius)' }}
-                                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                            <img src={form.logo} alt="" className={s.avatar} style={{ borderRadius: '24px', background: '#fff', padding: '1rem', objectFit: 'contain' }} />
                         ) : (
-                            <div className={s.avatarPlaceholder} onClick={() => logoRef.current?.click()}
-                                style={{ borderRadius: 'var(--radius)' }}>
-                                🏢
+                            <div className={s.avatarPlaceholder} onClick={() => logoRef.current?.click()} style={{ borderRadius: '24px' }}>
+                                <Building2 size={40} />
                             </div>
                         )}
-                        <button className={s.avatarUploadBtn} onClick={() => logoRef.current?.click()}
-                            disabled={uploadingLogo} title="Upload logo"
-                            style={{ borderRadius: 'var(--radius)' }}>
-                            {uploadingLogo ? '…' : '✎'}
+                        <button className={s.avatarUploadBtn} onClick={() => logoRef.current?.click()} disabled={uploadingLogo}>
+                            {uploadingLogo ? '...' : <Upload size={18} />}
                         </button>
                         <input ref={logoRef} type="file" accept="image/*" hidden onChange={handleLogoUpload} />
                     </div>
                     <div className={s.headerInfo}>
-                        <h1>{form.company || 'Your Company'}</h1>
-                        <p>{form.industry ? `${form.industry} • ${form.companySize || ''} employees` : 'Add company details'}</p>
+                        <h1>{form.company || 'Initialize Company'}</h1>
+                        <p>{form.industry ? `${form.industry} • ${form.companySize || 'Growing'} HQ` : 'Set up your organizational presence'}</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                        <Link href={`/profile/employer/${user._id}`} target="_blank">
+                            <motion.button whileHover={{ y: -2 }} style={{ padding: '0.8rem 1.5rem', borderRadius: '14px', border: '1px solid #e2e8f0', background: 'white', color: '#0f172a', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <ExternalLink size={18} /> Public Preview
+                            </motion.button>
+                        </Link>
                     </div>
                 </div>
 
-                {/* ── Completeness ── */}
+                {/* ── Strength ── */}
                 <div className={s.completeness}>
                     <div className={s.completenessHeader}>
-                        <span className={s.completenessLabel}>Profile Strength</span>
+                        <span className={s.completenessLabel}>Branding Strength</span>
                         <span className={s.completenessScore} style={{ color: barColor }}>{completeness.score}%</span>
                     </div>
                     <div className={s.completenessBar}>
-                        <div className={s.completenessFill} style={{ width: `${completeness.score}%`, background: barColor }} />
+                        <motion.div 
+                            initial={{ width: 0 }} 
+                            animate={{ width: `${completeness.score}%` }} 
+                            transition={{ duration: 1 }}
+                            className={s.completenessFill} 
+                            style={{ background: barColor }} 
+                        />
                     </div>
-                    {completeness.missing.length > 0 && (
-                        <div className={s.completenessTips}>
-                            {completeness.missing.slice(0, 5).map(tip => (
-                                <span key={tip} className={s.completenessTip}>+ {tip}</span>
-                            ))}
-                        </div>
-                    )}
+                    <div className={s.completenessTips}>
+                        {completeness.missing.map(m => (
+                            <span key={m} className={s.completenessTip}>+ {m}</span>
+                        ))}
+                    </div>
                 </div>
 
-                {/* ── Toast ── */}
-                <AnimatePresence>
-                    {msg.text && (
-                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                            className={msg.ok ? s.toastSuccess : s.toastError}>
-                            {msg.ok ? '✓' : '✕'} {msg.text}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* ── Tabs ── */}
+                {/* ── Navigation ── */}
                 <div className={s.tabs}>
-                    {TABS.map(t => (
-                        <button key={t} className={`${s.tab} ${tab === t ? s.tabActive : ''}`}
-                            onClick={() => setTab(t)}>{t}</button>
+                    {TABS.map(({ id, icon: Icon }) => (
+                        <button key={id} onClick={() => setTab(id)} className={`${s.tab} ${tab === id ? s.tabActive : ''}`}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                <Icon size={16} /> {id}
+                            </span>
+                        </button>
                     ))}
                 </div>
 
-                <form onSubmit={save}>
-                    {/* ═══ TAB 1: Company Details ═══ */}
-                    {tab === 'Company Details' && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} key="company">
-                            <div className={s.section}>
-                                <div className={s.sectionTitle}>🏢 Company Information</div>
-                                <div className={s.formGrid}>
-                                    <div className={s.field}>
-                                        <label className={s.label}>Company Name *</label>
-                                        <input className={s.input} name="company" value={form.company} onChange={set}
-                                            required placeholder="Acme Corporation" />
-                                    </div>
-                                    <div className={s.field}>
-                                        <label className={s.label}>Company Description</label>
-                                        <textarea className={s.textarea} name="companyDescription" value={form.companyDescription}
-                                            onChange={set} rows={5} maxLength={2000}
-                                            placeholder="What does your company do? Mission, culture, and values…" />
-                                        <span className={s.hint}>{form.companyDescription.length}/2000</span>
-                                    </div>
-                                    <div className={s.formRow}>
-                                        <div className={s.field}>
-                                            <label className={s.label}>Industry</label>
-                                            <select className={s.select} name="industry" value={form.industry} onChange={set}>
-                                                <option value="">Select Industry</option>
-                                                {INDUSTRIES.map(ind => <option key={ind} value={ind}>{ind}</option>)}
-                                            </select>
+                <form onSubmit={save} style={{ minHeight: '500px' }}>
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={tab}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            {tab === 'Company Details' && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                                    <div className={s.section}>
+                                        <h2 className={s.sectionTitle}><Info size={24} /> Organization Overview</h2>
+                                        <div className={s.formGrid}>
+                                            <div className={s.field}>
+                                                <label className={s.label}>Company Brand Name</label>
+                                                <input className={s.input} name="company" value={form.company} onChange={handleSet} placeholder="e.g. Acme Tech" />
+                                            </div>
+                                            <div className={s.formRow}>
+                                                <div className={s.field}>
+                                                    <label className={s.label}>Core Industry</label>
+                                                    <select className={s.select} name="industry" value={form.industry} onChange={handleSet}>
+                                                        <option value="">Select Domain</option>
+                                                        {INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div className={s.field}>
+                                                    <label className={s.label}>Workforce Scale</label>
+                                                    <select className={s.select} name="companySize" value={form.companySize} onChange={handleSet}>
+                                                        <option value="">Select Size</option>
+                                                        {SIZES.map(s => <option key={s} value={s}>{s} members</option>)}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div className={s.field}>
+                                                <label className={s.label}>Company Story & Mission</label>
+                                                <textarea className={s.textarea} name="companyDescription" value={form.companyDescription} onChange={handleSet} placeholder="Share your company's vision, culture, and achievements..." />
+                                            </div>
                                         </div>
-                                        <div className={s.field}>
-                                            <label className={s.label}>Company Size</label>
-                                            <select className={s.select} name="companySize" value={form.companySize} onChange={set}>
-                                                <option value="">Select Size</option>
-                                                {SIZES.map(sz => <option key={sz} value={sz}>{sz} employees</option>)}
-                                            </select>
-                                        </div>
                                     </div>
-                                </div>
-                            </div>
 
-                            {/* Benefits */}
-                            <div className={s.section}>
-                                <div className={s.sectionTitle}>🎁 Benefits & Perks</div>
-                                <div className={s.tagsWrap}>
-                                    {form.companyBenefits.map((b, i) => (
-                                        <span key={i} className={s.tag}>
-                                            {b}
-                                            <button type="button" className={s.tagRemove} onClick={() => removeBenefit(i)}>×</button>
-                                        </span>
-                                    ))}
-                                    <input className={s.tagInput} placeholder="Type a benefit & press Enter"
-                                        value={benefitInput} onChange={e => setBenefitInput(e.target.value)}
-                                        onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addBenefit(); } }} />
+                                    <div className={s.section}>
+                                        <h2 className={s.sectionTitle}><Heart size={24} /> Company Perks & Benefits</h2>
+                                        <div className={s.tagsWrap}>
+                                            {form.companyBenefits.map((b, i) => (
+                                                <span key={i} className={s.tag} style={{ background: '#2563eb' }}>
+                                                    {b} <button type="button" className={s.tagRemove} onClick={() => setForm(f => ({ ...f, companyBenefits: f.companyBenefits.filter((_, idx) => idx !== i) }))}><X size={14} /></button>
+                                                </span>
+                                            ))}
+                                            <input 
+                                                className={s.tagInput} 
+                                                placeholder="Add a perk (e.g. Remote Work) & press Enter" 
+                                                value={benefitInput} 
+                                                onChange={e => setBenefitInput(e.target.value)}
+                                                onKeyDown={e => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        if (benefitInput.trim() && !form.companyBenefits.includes(benefitInput.trim())) {
+                                                            setForm(f => ({ ...f, companyBenefits: [...f.companyBenefits, benefitInput.trim()] }));
+                                                            setBenefitInput('');
+                                                        }
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
-                                <span className={s.hint}>e.g., Remote Work, Health Insurance, Free Lunch — press Enter to add</span>
-                            </div>
+                            )}
+
+                            {tab === 'Contact & Location' && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                                    <div className={s.section}>
+                                        <h2 className={s.sectionTitle}><User size={24} /> Authorized Contact</h2>
+                                        <div className={s.formGrid}>
+                                            <div className={s.formRow}>
+                                                <div className={s.field}>
+                                                    <label className={s.label}>Representative Name</label>
+                                                    <input className={s.input} name="name" value={form.name} onChange={handleSet} placeholder="Your full name" />
+                                                </div>
+                                                <div className={s.field}>
+                                                    <label className={s.label}>Office Email</label>
+                                                    <input className={s.inputReadonly} value={form.email} readOnly />
+                                                </div>
+                                            </div>
+                                            <div className={s.field}>
+                                                <label className={s.label}>Contact Phone</label>
+                                                <div style={{ position: 'relative' }}>
+                                                    <Phone size={18} style={{ position: 'absolute', left: '1rem', top: '1.2rem', color: '#94a3b8' }} />
+                                                    <input className={s.input} style={{ paddingLeft: '3rem' }} name="phone" value={form.phone} onChange={handleSet} placeholder="+1 (000) 000-0000" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className={s.section}>
+                                        <h2 className={s.sectionTitle}><MapPin size={24} /> Headquarters</h2>
+                                        <div className={s.formRowThree}>
+                                            <div className={s.field}>
+                                                <label className={s.label}>City</label>
+                                                <input className={s.input} value={form.location.city} onChange={e => handleNested('location', 'city', e.target.value)} placeholder="San Francisco" />
+                                            </div>
+                                            <div className={s.field}>
+                                                <label className={s.label}>State / Prov</label>
+                                                <input className={s.input} value={form.location.state} onChange={e => handleNested('location', 'state', e.target.value)} placeholder="California" />
+                                            </div>
+                                            <div className={s.field}>
+                                                <label className={s.label}>Country</label>
+                                                <input className={s.input} value={form.location.country} onChange={e => handleNested('location', 'country', e.target.value)} placeholder="USA" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {tab === 'Online Presence' && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                                    <div className={s.section}>
+                                        <h2 className={s.sectionTitle}><Globe size={24} /> Corporate Ecosystem</h2>
+                                        <div className={s.formGrid}>
+                                            <div className={s.field}>
+                                                <label className={s.label}>Official Website</label>
+                                                <div style={{ position: 'relative' }}>
+                                                    <Globe size={18} style={{ position: 'absolute', left: '1rem', top: '1.2rem', color: '#2563eb' }} />
+                                                    <input className={s.input} style={{ paddingLeft: '3rem' }} name="website" value={form.website} onChange={handleSet} placeholder="https://acme.com" />
+                                                </div>
+                                            </div>
+                                            
+                                            <div className={s.formRow}>
+                                                <div className={s.field}>
+                                                    <label className={s.label}>LinkedIn Page</label>
+                                                    <div style={{ position: 'relative' }}>
+                                                        <Linkedin size={18} style={{ position: 'absolute', left: '1rem', top: '1.2rem', color: '#0077b5' }} />
+                                                        <input className={s.input} style={{ paddingLeft: '3rem' }} value={form.companySocialLinks.linkedin} onChange={e => handleNested('companySocialLinks', 'linkedin', e.target.value)} placeholder="linkedin.com/company/acme" />
+                                                    </div>
+                                                </div>
+                                                <div className={s.field}>
+                                                    <label className={s.label}>Twitter / X</label>
+                                                    <div style={{ position: 'relative' }}>
+                                                        <Twitter size={18} style={{ position: 'absolute', left: '1rem', top: '1.2rem', color: '#1DA1F2' }} />
+                                                        <input className={s.input} style={{ paddingLeft: '3rem' }} value={form.companySocialLinks.twitter} onChange={e => handleNested('companySocialLinks', 'twitter', e.target.value)} placeholder="twitter.com/acme" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className={s.field}>
+                                                <label className={s.label}>Facebook Presence</label>
+                                                <div style={{ position: 'relative' }}>
+                                                    <Facebook size={18} style={{ position: 'absolute', left: '1rem', top: '1.2rem', color: '#1877F2' }} />
+                                                    <input className={s.input} style={{ paddingLeft: '3rem' }} value={form.companySocialLinks.facebook} onChange={e => handleNested('companySocialLinks', 'facebook', e.target.value)} placeholder="facebook.com/acme" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </motion.div>
-                    )}
-
-                    {/* ═══ TAB 2: Contact & Location ═══ */}
-                    {tab === 'Contact & Location' && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} key="contact">
-                            <div className={s.section}>
-                                <div className={s.sectionTitle}>👤 Contact Person</div>
-                                <div className={s.formGrid}>
-                                    <div className={s.formRow}>
-                                        <div className={s.field}>
-                                            <label className={s.label}>Your Name *</label>
-                                            <input className={s.input} name="name" value={form.name} onChange={set} required />
-                                        </div>
-                                        <div className={s.field}>
-                                            <label className={s.label}>Email</label>
-                                            <input className={s.inputReadonly} value={form.email} readOnly />
-                                        </div>
-                                    </div>
-                                    <div className={s.field}>
-                                        <label className={s.label}>Phone</label>
-                                        <input className={s.input} name="phone" value={form.phone} onChange={set}
-                                            placeholder="+1 (555) 123-4567" />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className={s.section}>
-                                <div className={s.sectionTitle}>📍 Office Location</div>
-                                <div className={s.formRowThree}>
-                                    <div className={s.field}>
-                                        <label className={s.label}>City</label>
-                                        <input className={s.input} value={form.location.city}
-                                            onChange={e => setNested('location', 'city', e.target.value)} placeholder="San Francisco" />
-                                    </div>
-                                    <div className={s.field}>
-                                        <label className={s.label}>State / Province</label>
-                                        <input className={s.input} value={form.location.state}
-                                            onChange={e => setNested('location', 'state', e.target.value)} placeholder="California" />
-                                    </div>
-                                    <div className={s.field}>
-                                        <label className={s.label}>Country</label>
-                                        <input className={s.input} value={form.location.country}
-                                            onChange={e => setNested('location', 'country', e.target.value)} placeholder="USA" />
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {/* ═══ TAB 3: Online Presence ═══ */}
-                    {tab === 'Online Presence' && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} key="online">
-                            <div className={s.section}>
-                                <div className={s.sectionTitle}>🌐 Website & Logo</div>
-                                <div className={s.formGrid}>
-                                    <div className={s.field}>
-                                        <label className={s.label}>Company Website</label>
-                                        <input className={s.input} name="website" value={form.website} onChange={set}
-                                            placeholder="https://yourcompany.com" type="url" />
-                                    </div>
-                                    <div className={s.field}>
-                                        <label className={s.label}>Company Logo</label>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                            {form.logo && (
-                                                <img src={form.logo} alt="Logo" className={s.logoPreview}
-                                                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                                            )}
-                                            <Button type="button" variant="outline" size="sm"
-                                                onClick={() => logoRef.current?.click()}
-                                                disabled={uploadingLogo}>
-                                                {uploadingLogo ? 'Uploading…' : form.logo ? 'Change Logo' : 'Upload Logo'}
-                                            </Button>
-                                        </div>
-                                        <span className={s.hint}>Square image recommended (PNG, JPG) — max 5 MB</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className={s.section}>
-                                <div className={s.sectionTitle}>🔗 Social Profiles</div>
-                                <div className={s.formGrid}>
-                                    <div className={s.socialRow}>
-                                        <div className={s.field}>
-                                            <label className={s.label}>LinkedIn</label>
-                                            <input className={s.input} placeholder="https://linkedin.com/company/…"
-                                                value={form.companySocialLinks.linkedin}
-                                                onChange={e => setNested('companySocialLinks', 'linkedin', e.target.value)} />
-                                        </div>
-                                        <div className={s.field}>
-                                            <label className={s.label}>Twitter / X</label>
-                                            <input className={s.input} placeholder="https://twitter.com/…"
-                                                value={form.companySocialLinks.twitter}
-                                                onChange={e => setNested('companySocialLinks', 'twitter', e.target.value)} />
-                                        </div>
-                                    </div>
-                                    <div className={s.field}>
-                                        <label className={s.label}>Facebook</label>
-                                        <input className={s.input} placeholder="https://facebook.com/…"
-                                            value={form.companySocialLinks.facebook}
-                                            onChange={e => setNested('companySocialLinks', 'facebook', e.target.value)} />
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
+                    </AnimatePresence>
 
                     {/* ── Actions ── */}
                     <div className={s.actions}>
-                        <Link href={`/profile/employer/${user?._id}`}>
-                            <Button type="button" variant="outline" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                View Public Profile ↗
-                            </Button>
-                        </Link>
                         <Button type="button" variant="secondary" onClick={() => router.push('/dashboard/employer')}>
-                            Cancel
+                            Discard Changes
                         </Button>
-                        <Button type="submit" disabled={saving}
-                            style={{ background: 'var(--gradient-primary)', border: 'none', boxShadow: 'var(--shadow-glow)' }}>
-                            {saving ? 'Saving…' : 'Save Profile'}
-                        </Button>
+                        <motion.button 
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            type="submit" 
+                            disabled={saving}
+                            style={{ 
+                                padding: '1rem 2.5rem', borderRadius: '18px', background: '#0f172a', 
+                                color: 'white', border: 'none', fontWeight: 900, fontSize: '1rem', 
+                                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.75rem',
+                                boxShadow: '0 10px 25px rgba(15, 23, 42, 0.1)'
+                            }}
+                        >
+                            {saving ? 'Syncing...' : <><Save size={20} /> Deploy Changes</>}
+                        </motion.button>
                     </div>
                 </form>
             </motion.div>
         </div>
     );
+}
+
+function User({ size, color }: { size?: number, color?: string }) {
+    return <Briefcase size={size} color={color} />; // Fallback or imported
 }

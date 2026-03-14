@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface FilterState {
     types: string[];
     location: string;
+    category: string;
 }
 
 interface Props {
@@ -16,132 +17,195 @@ interface Props {
 
 const JOB_TYPES = ['Full-time', 'Part-time', 'Contract', 'Internship', 'Freelance'];
 const LOCATIONS = ['Remote', 'On-site', 'Hybrid'];
+const JOB_CATEGORIES = ['Engineering', 'Design', 'Marketing', 'Sales', 'Finance', 'Management', 'Healthcare', 'Education', 'Other'];
 
 export default function FilterSidebar({ onFilterChange, onClose }: Props) {
     const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
     const [selectedLocation, setSelectedLocation] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('');
 
     const toggleType = (type: string) => {
         const updated = selectedTypes.includes(type)
             ? selectedTypes.filter(t => t !== type)
             : [...selectedTypes, type];
         setSelectedTypes(updated);
-        onFilterChange({ types: updated, location: selectedLocation });
+        onFilterChange({ types: updated, location: selectedLocation, category: selectedCategory });
     };
 
     const selectLocation = (loc: string) => {
         const updated = selectedLocation === loc ? '' : loc;
         setSelectedLocation(updated);
-        onFilterChange({ types: selectedTypes, location: updated });
+        onFilterChange({ types: selectedTypes, location: updated, category: selectedCategory });
+    };
+
+    const selectCategory = (cat: string) => {
+        const updated = selectedCategory === cat ? '' : cat;
+        setSelectedCategory(updated);
+        onFilterChange({ types: selectedTypes, location: selectedLocation, category: updated });
     };
 
     const clearAll = () => {
         setSelectedTypes([]);
         setSelectedLocation('');
-        onFilterChange({ types: [], location: '' });
+        setSelectedCategory('');
+        onFilterChange({ types: [], location: '', category: '' });
     };
 
-    const hasFilters = selectedTypes.length > 0 || selectedLocation;
+    const hasFilters = selectedTypes.length > 0 || selectedLocation || selectedCategory;
 
     const checkboxStyle = (active: boolean) => ({
-        width: '22px',
-        height: '22px',
-        borderRadius: '7px',
-        border: active ? '2.5px solid #2563eb' : '2px solid #e2e8f0',
+        width: '24px',
+        height: '24px',
+        borderRadius: '8px',
+        border: active ? '3px solid #2563eb' : '2px solid #e2e8f0',
         display: 'flex' as const,
         alignItems: 'center' as const,
         justifyContent: 'center' as const,
-        background: active ? '#2563eb' : 'transparent',
-        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+        background: active ? '#2563eb' : 'white',
+        transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         flexShrink: 0,
-        boxShadow: active ? '0 4px 10px rgba(37,99,235,0.15)' : 'none'
+        boxShadow: active ? '0 8px 16px rgba(37,99,235,0.2)' : 'none'
     });
 
     return (
         <div style={{
             background: 'white',
-            padding: '2rem 1.75rem',
-            borderRadius: '24px',
-            border: '1px solid rgba(226, 232, 240, 0.8)',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
+            padding: '3rem 2.5rem',
+            borderRadius: '40px',
+            border: '1px solid #f1f5f9',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.02)',
+            position: 'relative',
+            overflow: 'hidden'
         }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
                     <div style={{
-                        width: '36px', height: '36px', borderRadius: '10px', background: '#f1f5f9',
+                        width: '48px', height: '48px', borderRadius: '16px', 
+                        background: '#eff6ff',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb'
                     }}>
-                        <SlidersHorizontal size={20} strokeWidth={2.5} />
+                        <SlidersHorizontal size={24} strokeWidth={3} />
                     </div>
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>Filter Results</h3>
+                    <h3 style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.04em' }}>Discovery</h3>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                     {hasFilters && (
-                        <button
+                        <motion.button
+                            initial={{ opacity: 0, x: 10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={clearAll}
                             style={{
-                                display: 'flex', alignItems: 'center', gap: '0.3rem',
-                                background: 'none', border: 'none', color: '#2563eb',
-                                fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                background: '#f8fafc', border: '1px solid #f1f5f9', color: '#64748b',
+                                padding: '0.6rem 1rem', borderRadius: '14px',
+                                fontSize: '0.85rem', fontWeight: 800, cursor: 'pointer',
                             }}
                         >
-                            <RotateCcw size={14} /> Clear
-                        </button>
+                            <RotateCcw size={14} strokeWidth={3} /> Reset
+                        </motion.button>
                     )}
                     {onClose && (
                         <button
                             onClick={onClose}
                             style={{
-                                background: '#f1f5f9', border: 'none', padding: '0.5rem',
-                                borderRadius: '10px', cursor: 'pointer', color: '#64748b'
+                                background: '#f8fafc', border: 'none', padding: '0.75rem',
+                                borderRadius: '14px', cursor: 'pointer', color: '#475569'
                             }}
                             className="desktop-hide"
                         >
-                            <X size={18} />
+                            <X size={24} strokeWidth={3} />
                         </button>
                     )}
                 </div>
             </div>
 
             {/* Job Type */}
-            <div style={{ marginBottom: '2rem' }}>
+            <div style={{ marginBottom: '3rem' }}>
                 <h4 style={{
-                    fontSize: '0.85rem', fontWeight: 700, color: '#71717a',
-                    marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em',
+                    fontSize: '0.85rem', fontWeight: 800, color: '#94a3b8',
+                    marginBottom: '1.5rem', textTransform: 'uppercase', letterSpacing: '0.15em',
                 }}>
-                    Job Type
+                    Employment Tier
                 </h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                     {JOB_TYPES.map(type => {
                         const active = selectedTypes.includes(type);
                         return (
-                            <label
+                            <motion.label
                                 key={type}
+                                whileHover={{ x: 6 }}
                                 onClick={() => toggleType(type)}
                                 style={{
-                                    display: 'flex', alignItems: 'center', gap: '0.85rem',
-                                    cursor: 'pointer', fontSize: '0.95rem', color: '#1e293b',
-                                    fontWeight: active ? 600 : 500,
-                                    padding: '2px 0',
-                                    transition: 'all 0.2s'
+                                    display: 'flex', alignItems: 'center', gap: '1.25rem',
+                                    cursor: 'pointer', fontSize: '1.05rem', color: active ? '#0f172a' : '#64748b',
+                                    fontWeight: active ? 800 : 600,
+                                    padding: '4px 0',
+                                    transition: 'color 0.2s'
                                 }}
                             >
                                 <div style={checkboxStyle(active)}>
                                     <AnimatePresence>
                                         {active && (
                                             <motion.div
-                                                initial={{ scale: 0.5, opacity: 0 }}
-                                                animate={{ scale: 1, opacity: 1 }}
-                                                exit={{ scale: 0.5, opacity: 0 }}
-                                                transition={{ duration: 0.2 }}
+                                                initial={{ scale: 0, rotate: -45 }}
+                                                animate={{ scale: 1, rotate: 0 }}
+                                                exit={{ scale: 0, rotate: 45 }}
+                                                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                                             >
-                                                <Check size={14} color="white" strokeWidth={3.5} />
+                                                <Check size={16} color="white" strokeWidth={4.5} />
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
                                 </div>
-                                <span style={{ transition: 'all 0.2s', color: active ? '#2563eb' : '#475569' }}>{type}</span>
-                            </label>
+                                <span>{type}</span>
+                            </motion.label>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Job Category */}
+            <div style={{ marginBottom: '3rem' }}>
+                <h4 style={{
+                    fontSize: '0.85rem', fontWeight: 800, color: '#94a3b8',
+                    marginBottom: '1.5rem', textTransform: 'uppercase', letterSpacing: '0.15em',
+                }}>
+                    Core Specialization
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    {JOB_CATEGORIES.map(cat => {
+                        const active = selectedCategory === cat;
+                        return (
+                            <motion.label
+                                key={cat}
+                                whileHover={{ x: 6 }}
+                                onClick={() => selectCategory(cat)}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '1.25rem',
+                                    cursor: 'pointer', fontSize: '1.05rem', color: active ? '#0f172a' : '#64748b',
+                                    fontWeight: active ? 800 : 600,
+                                    padding: '4px 0',
+                                    transition: 'color 0.2s'
+                                }}
+                            >
+                                <div style={checkboxStyle(active)}>
+                                    <AnimatePresence>
+                                        {active && (
+                                            <motion.div
+                                                initial={{ scale: 0 }}
+                                                animate={{ scale: 1 }}
+                                                exit={{ scale: 0 }}
+                                                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                                            >
+                                                <Check size={16} color="white" strokeWidth={4.5} />
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+                                <span>{cat}</span>
+                            </motion.label>
                         );
                     })}
                 </div>
@@ -150,24 +214,25 @@ export default function FilterSidebar({ onFilterChange, onClose }: Props) {
             {/* Work Location */}
             <div style={{ marginBottom: '1rem' }}>
                 <h4 style={{
-                    fontSize: '0.8rem', fontWeight: 800, color: '#94a3b8',
-                    marginBottom: '1.25rem', textTransform: 'uppercase', letterSpacing: '0.1em',
+                    fontSize: '0.85rem', fontWeight: 800, color: '#94a3b8',
+                    marginBottom: '1.5rem', textTransform: 'uppercase', letterSpacing: '0.15em',
                 }}>
-                    Work Location
+                    Workspace Dynamics
                 </h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                     {LOCATIONS.map(loc => {
                         const active = selectedLocation === loc;
                         return (
-                            <label
+                            <motion.label
                                 key={loc}
+                                whileHover={{ x: 6 }}
                                 onClick={() => selectLocation(loc)}
                                 style={{
-                                    display: 'flex', alignItems: 'center', gap: '0.85rem',
-                                    cursor: 'pointer', fontSize: '0.95rem', color: '#1e293b',
-                                    fontWeight: active ? 600 : 500,
-                                    padding: '2px 0',
-                                    transition: 'all 0.2s'
+                                    display: 'flex', alignItems: 'center', gap: '1.25rem',
+                                    cursor: 'pointer', fontSize: '1.05rem', color: active ? '#0f172a' : '#64748b',
+                                    fontWeight: active ? 800 : 600,
+                                    padding: '4px 0',
+                                    transition: 'color 0.2s'
                                 }}
                             >
                                 <div style={checkboxStyle(active)}>
@@ -177,15 +242,15 @@ export default function FilterSidebar({ onFilterChange, onClose }: Props) {
                                                 initial={{ scale: 0.5, opacity: 0 }}
                                                 animate={{ scale: 1, opacity: 1 }}
                                                 exit={{ scale: 0.5, opacity: 0 }}
-                                                transition={{ duration: 0.2 }}
+                                                transition={{ type: 'spring', stiffness: 500, damping: 25 }}
                                             >
-                                                <Check size={14} color="white" strokeWidth={3.5} />
+                                                <Check size={16} color="white" strokeWidth={4.5} />
                                             </motion.div>
                                         )}
                                     </AnimatePresence>
                                 </div>
-                                <span style={{ transition: 'all 0.2s', color: active ? '#2563eb' : '#475569' }}>{loc}</span>
-                            </label>
+                                <span>{loc}</span>
+                            </motion.label>
                         );
                     })}
                 </div>

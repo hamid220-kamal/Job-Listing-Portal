@@ -158,12 +158,18 @@ const uploadAvatar = asyncHandler(async (req, res) => {
 const fs = require('fs');
 const path = require('path');
 
-// ─── POST /api/profile/upload-resume — upload resume (LOCAL) ─
+// ─── POST /api/profile/upload-resume — upload resume (CLOUDINARY) ─
 
 const uploadResume = asyncHandler(async (req, res) => {
     if (!req.file) {
         res.status(400);
         throw new Error('Please select a file to upload');
+    }
+
+    // Security check: Only allow PDF files for resumes
+    if (req.file.mimetype !== 'application/pdf') {
+        res.status(400);
+        throw new Error('Please upload your resume in PDF format only for security reasons');
     }
 
     const user = await User.findById(req.user._id);
@@ -172,35 +178,25 @@ const uploadResume = asyncHandler(async (req, res) => {
         throw new Error('Only candidates can upload resumes');
     }
 
-    // Delete old resume if it exists locally
-    if (user.resume && user.resume.startsWith('/uploads/')) {
-        const oldPath = path.join(__dirname, '../../..', user.resume);
-        if (fs.existsSync(oldPath)) {
-            try {
-                fs.unlinkSync(oldPath);
-            } catch (err) {
-                console.error('Local delete error:', err.message);
-            }
-        }
-    } else if (user.resumePublicId) {
-        // Fallback for old Cloudinary files
+    // Delete old resume if it exists on Cloudinary
+    if (user.resumePublicId) {
         await deleteFromCloudinary(user.resumePublicId, user.resumeResourceType || 'raw');
     }
 
-    // Construct local URL path
-    const fileUrl = `/uploads/resumes/${req.file.filename}`;
+    // Upload to Cloudinary as 'raw' file (for PDFs/Docs)
+    const result = await uploadToCloudinary(req.file.buffer, 'resumes', 'raw', '', req.file.mimetype);
 
     await User.findByIdAndUpdate(req.user._id, {
-        resume: fileUrl,
-        resumePublicId: '', // Clear cloudinary ID
-        resumeResourceType: 'local',
+        resume: result.url,
+        resumePublicId: result.publicId,
+        resumeResourceType: 'raw',
         resumeFileName: req.file.originalname,
     });
 
     res.json({
-        resume: fileUrl,
+        resume: result.url,
         resumeFileName: req.file.originalname,
-        message: 'Resume uploaded locally!',
+        message: 'Resume uploaded successfully!',
     });
 });
 
@@ -271,6 +267,38 @@ const getPublicProfile = asyncHandler(async (req, res) => {
     res.json(profile);
 });
 
+// ─── POST /api/profile/bookmarks/:jobId — toggle bookmark ───
+
+const toggleBookmark = asyncHandler(async (req, res) => {
+    const userId = req.user._id || req.user.id;
+    const { jobId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(jobId)) {
+        res.status(400);
+        throw new Error('Invalid job ID');
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+        res.status(404);
+        throw new Error('User not found');
+    }
+
+    const isBookmarked = user.bookmarks.includes(jobId);
+
+    if (isBookmarked) {
+        user.bookmarks = user.bookmarks.filter(id => id.toString() !== jobId);
+    } else {
+        user.bookmarks.push(jobId);
+    }
+
+    await user.save();
+    res.json({ 
+        bookmarked: !isBookmarked, 
+        message: !isBookmarked ? 'Job saved to bookmarks!' : 'Job removed from bookmarks' 
+    });
+});
+
 module.exports = {
     profileValidation,
     getProfile,
@@ -280,4 +308,5 @@ module.exports = {
     uploadLogo,
     getCompleteness,
     getPublicProfile,
+    toggleBookmark,
 };

@@ -9,6 +9,7 @@ const {
     uploadLogo,
     getCompleteness,
     getPublicProfile,
+    toggleBookmark,
 } = require('./profile.controller');
 const { protect } = require('../../middleware/authMiddleware');
 const { upload, resumeUpload } = require('../../middleware/uploadMiddleware');
@@ -23,6 +24,7 @@ router.get('/completeness', protect, getCompleteness);
 router.post('/upload-avatar', protect, upload.single('avatar'), uploadAvatar);
 router.post('/upload-resume', protect, resumeUpload.single('resume'), uploadResume);
 router.post('/upload-logo', protect, upload.single('logo'), uploadLogo);
+router.post('/bookmarks/:jobId', protect, toggleBookmark);
 
 // Public route — must come last (catches :id param)
 router.get('/:id', getPublicProfile);

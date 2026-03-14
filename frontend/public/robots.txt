@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /profile/edit/
+
+Sitemap: https://jobportal.example.com/sitemap.xml

@@ -1,9 +1,13 @@
+"use client";
+
 import React, { ButtonHTMLAttributes } from 'react';
+import { motion } from 'framer-motion';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: 'primary' | 'secondary' | 'ghost' | 'outline';
-    size?: 'sm' | 'md' | 'lg';
+    variant?: 'primary' | 'secondary' | 'ghost' | 'outline' | 'accent';
+    size?: 'sm' | 'md' | 'lg' | 'xl';
     children: React.ReactNode;
+    fullWidth?: boolean;
 }
 
 export default function Button({
@@ -12,6 +16,7 @@ export default function Button({
     className = '',
     children,
     style,
+    fullWidth,
     ...props
 }: ButtonProps) {
 
@@ -19,46 +24,58 @@ export default function Button({
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: 'var(--radius)',
-        fontWeight: 500,
+        borderRadius: size === 'xl' ? '24px' : '16px',
+        fontWeight: 800,
         cursor: 'pointer',
-        transition: 'all 0.2s ease',
+        transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
         border: '1px solid transparent',
         fontFamily: 'inherit',
         outline: 'none',
+        width: fullWidth ? '100%' : 'auto',
+        letterSpacing: '-0.01em',
     };
 
     const variantStyles = {
         primary: {
-            backgroundColor: '#2563eb',
+            background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
             color: '#ffffff',
-            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)',
+            boxShadow: '0 10px 25px -5px rgba(37, 99, 235, 0.3)',
+            border: 'none',
+        },
+        accent: {
+            background: '#0f172a',
+            color: '#ffffff',
+            boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.3)',
+            border: 'none',
         },
         secondary: {
-            backgroundColor: 'var(--background)',
-            color: 'var(--foreground)',
-            borderColor: 'var(--border)',
+            backgroundColor: '#f1f5f9',
+            color: '#0f172a',
+            border: '1px solid #e2e8f0',
         },
         ghost: {
             backgroundColor: 'transparent',
-            color: 'var(--muted-foreground)',
+            color: '#64748b',
         },
         outline: {
             backgroundColor: 'transparent',
-            color: 'var(--foreground)',
-            border: '1px solid var(--border)',
+            color: '#0f172a',
+            border: '2px solid #e2e8f0',
         }
     };
 
     const sizeStyles = {
-        sm: { padding: '0.25rem 0.75rem', fontSize: '0.875rem' },
-        md: { padding: '0.5rem 1rem', fontSize: '1rem' },
-        lg: { padding: '0.75rem 1.5rem', fontSize: '1.125rem' },
+        sm: { padding: '0.5rem 1rem', fontSize: '0.85rem' },
+        md: { padding: '0.75rem 1.5rem', fontSize: '0.95rem' },
+        lg: { padding: '1rem 2rem', fontSize: '1.05rem' },
+        xl: { padding: '1.25rem 3rem', fontSize: '1.15rem' },
     };
 
     return (
-        <button
-            className={`btn-${variant} ${className}`}
+        <motion.button
+            whileHover={{ scale: 1.03, y: -2 }}
+            whileTap={{ scale: 0.97 }}
+            className={`premium-btn btn-${variant} ${className}`}
             style={{
                 ...baseStyles,
                 ...variantStyles[variant],
@@ -68,6 +85,6 @@ export default function Button({
             {...props}
         >
             {children}
-        </button>
+        </motion.button>
     );
 }

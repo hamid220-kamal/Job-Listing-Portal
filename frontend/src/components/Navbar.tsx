@@ -74,13 +74,36 @@ export default function Navbar() {
     });
 
     const menuVariants: Variants = {
-        open: { x: 0, transition: { type: "spring", stiffness: 300, damping: 30 } },
-        closed: { x: "100%", transition: { type: "spring", stiffness: 300, damping: 30 } },
+        open: { 
+            x: 0, 
+            transition: { 
+                type: "spring", 
+                stiffness: 400, 
+                damping: 40,
+                staggerChildren: 0.07,
+                delayChildren: 0.2
+            } 
+        },
+        closed: { 
+            x: "100%", 
+            transition: { 
+                type: "spring", 
+                stiffness: 400, 
+                damping: 40,
+                staggerChildren: 0.05,
+                staggerDirection: -1
+            } 
+        },
     } as any;
 
+    const itemVariants = {
+        open: { opacity: 1, x: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
+        closed: { opacity: 0, x: 20, transition: { type: 'spring', stiffness: 300, damping: 24 } }
+    };
+
     const overlayVariants = {
-        open: { opacity: 1 },
-        closed: { opacity: 0 },
+        open: { opacity: 1, backdropFilter: 'blur(12px)' },
+        closed: { opacity: 0, backdropFilter: 'blur(0px)' },
     };
 
     return (
@@ -90,17 +113,16 @@ export default function Navbar() {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ type: 'spring', stiffness: 100, damping: 20 }}
                 onMouseMove={handleMouseMove}
+                className="glass-premium"
                 style={{
                     position: 'fixed',
                     top: 0,
                     left: 0,
                     right: 0,
                     width: '100vw',
-                    height: '80px', // Slightly taller for premium feel
+                    height: '80px',
                     zIndex: 50,
-                    backgroundColor: 'rgba(255, 255, 255, 0.8)', // Light Glass
-                    backdropFilter: 'blur(20px)',
-                    borderBottom: '1px solid rgba(0,0,0,0.06)',
+                    borderBottom: '1px solid var(--border)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -114,11 +136,11 @@ export default function Navbar() {
                         pointerEvents: 'none',
                         position: 'absolute',
                         inset: 0,
-                        opacity: 0.3,
+                        opacity: 0.4,
                         background: useMotionTemplate`
                 radial-gradient(
                   600px circle at ${mouseX}px ${mouseY}px,
-                  rgba(37, 99, 235, 0.08),
+                  rgba(37, 99, 235, 0.12),
                   transparent 80%
                 )
               `,
@@ -139,21 +161,22 @@ export default function Navbar() {
                             className="logo-container"
                             whileHover="hover"
                             initial="initial"
-                            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}
+                            style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}
                         >
                             <motion.div
                                 variants={{
                                     initial: { rotate: 0, scale: 1 },
-                                    hover: { rotate: 180, scale: 1.1, boxShadow: '0 0 20px rgba(37, 99, 235, 0.2)' }
+                                    hover: { rotate: 180, scale: 1.15, boxShadow: '0 0 30px rgba(37, 99, 235, 0.3)' }
                                 }}
-                                transition={{ type: 'spring', stiffness: 200 }}
+                                transition={{ type: 'spring', stiffness: 200, damping: 10 }}
                                 style={{
-                                    width: '40px', height: '40px',
-                                    background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)',
-                                    borderRadius: '12px',
+                                    width: '44px', height: '44px',
+                                    background: 'var(--gradient-primary)',
+                                    borderRadius: '14px',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     color: '#ffffff', fontWeight: 900,
-                                    fontSize: '1.2rem'
+                                    fontSize: '1.3rem',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                                 }}
                             >
                                 J
@@ -163,15 +186,18 @@ export default function Navbar() {
                                     initial: { x: 0 },
                                     hover: { x: 5 }
                                 }}
-                                style={{ fontWeight: 700, fontSize: '1.4rem', color: '#0f172a', letterSpacing: '-0.03em' }}
+                                style={{ fontWeight: 850, fontSize: '1.5rem', color: '#0f172a', letterSpacing: '-0.04em' }}
                             >
                                 JobPortal
                             </motion.span>
                         </motion.div>
                     </Link>
 
-                    {/* Desktop Nav Links - Staggered Entry */}
-                    <nav className="desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {/* Desktop Nav Links */}
+                    <nav className="desktop-only" style={{ 
+                        display: 'flex', alignItems: 'center', gap: '4px',
+                        background: 'rgba(0,0,0,0.03)', padding: '4px', borderRadius: '16px'
+                    }}>
                         {navLinks.map((item, i) => {
                             const isActive = pathname === item.href;
                             return (
@@ -184,29 +210,27 @@ export default function Navbar() {
                                     <Link href={item.href} style={{ position: 'relative', textDecoration: 'none' }}>
                                         <motion.div
                                             style={{
-                                                padding: '0.6rem 1.2rem',
+                                                padding: '0.6rem 1.4rem',
                                                 borderRadius: '12px',
                                                 color: isActive ? '#0f172a' : '#64748b',
                                                 fontSize: '0.95rem',
-                                                fontWeight: 500,
-                                                position: 'relative'
+                                                fontWeight: 650,
+                                                position: 'relative',
+                                                transition: 'color 0.3s ease'
                                             }}
-                                            whileHover={{ color: '#0f172a', backgroundColor: 'rgba(0,0,0,0.03)' }}
+                                            whileHover={{ color: '#0f172a' }}
                                         >
                                             {item.name}
                                             {isActive && (
                                                 <motion.div
-                                                    layoutId="nav-glow"
+                                                    layoutId="nav-pill"
                                                     style={{
                                                         position: 'absolute',
-                                                        bottom: -2,
-                                                        left: '50%',
-                                                        x: '-50%',
-                                                        width: '20px',
-                                                        height: '2px',
-                                                        background: '#2563eb',
-                                                        borderRadius: '2px',
-                                                        boxShadow: '0 0 10px rgba(37, 99, 235, 0.4)'
+                                                        inset: 0,
+                                                        background: 'white',
+                                                        borderRadius: '11px',
+                                                        zIndex: -1,
+                                                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
                                                     }}
                                                 />
                                             )}
@@ -218,52 +242,52 @@ export default function Navbar() {
                     </nav>
 
                     {/* Actions */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
                         <motion.button
-                            whileHover={{ scale: 1.1, rotate: 15 }}
+                            whileHover={{ scale: 1.1, backgroundColor: 'rgba(37, 99, 235, 0.1)', color: '#2563eb' }}
                             whileTap={{ scale: 0.9 }}
                             aria-label="Search"
                             style={{
-                                padding: '12px', borderRadius: '50%', border: '1px solid rgba(0,0,0,0.05)',
-                                background: 'rgba(0,0,0,0.02)', cursor: 'pointer', color: '#1e293b',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                padding: '12px', borderRadius: '14px', border: '1px solid var(--border)',
+                                background: 'white', cursor: 'pointer', color: '#1e293b',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                transition: 'all 0.3s ease'
                             }}
                         >
-                            <Search size={20} />
+                            <Search size={20} strokeWidth={2.5} />
                         </motion.button>
 
                         <div className="desktop-only" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                             {user ? (
                                 <>
                                     <Link href={user.role === 'employer' ? '/dashboard/employer' : '/dashboard/candidate'}>
-                                        <MagneticButton style={{ fontSize: '0.95rem', padding: '0.75rem 1.5rem', background: 'rgba(37, 99, 235, 0.05)', color: '#2563eb', border: '1px solid rgba(37, 99, 235, 0.1)', cursor: 'pointer', fontWeight: 700, borderRadius: '12px' }}>
+                                        <MagneticButton style={{ fontSize: '0.95rem', padding: '0.75rem 1.5rem', background: '#0f172a', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 700, borderRadius: '14px', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.2)' }}>
                                             Dashboard
                                         </MagneticButton>
                                     </Link>
                                     <Link href={user.role === 'employer' ? `/profile/employer/${user._id}` : `/profile/candidate/${user._id}`}>
-                                        <MagneticButton style={{ fontSize: '0.95rem', padding: '0.75rem 1.5rem', background: 'transparent', color: '#1e293b', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
-                                            My Profile
-                                        </MagneticButton>
+                                        <div style={{ 
+                                            width: '44px', height: '44px', borderRadius: '14px', border: '1px solid var(--border)',
+                                            overflow: 'hidden', background: '#f8fafc', cursor: 'pointer'
+                                        }}>
+                                            {user.avatar ? <img src={user.avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800 }}>{user.name[0]}</div>}
+                                        </div>
                                     </Link>
-                                    <MagneticButton
-                                        onClick={async () => {
-                                            await logout();
-                                            toast.success('Logged out successfully');
-                                        }}
-                                        style={{ fontSize: '0.95rem', padding: '0.75rem 1.75rem', background: '#ef4444', color: '#ffffff', fontWeight: 700, borderRadius: '99px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(239, 68, 68, 0.2)' }}
-                                    >
-                                        Logout
-                                    </MagneticButton>
                                 </>
                             ) : (
                                 <>
                                     <Link href="/auth/login">
-                                        <MagneticButton style={{ fontSize: '0.9rem', padding: '0.75rem 1.25rem', background: 'transparent', color: '#64748b', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
+                                        <MagneticButton style={{ fontSize: '0.95rem', padding: '0.75rem 1.25rem', background: 'transparent', color: '#64748b', border: 'none', cursor: 'pointer', fontWeight: 700 }}>
                                             Sign in
                                         </MagneticButton>
                                     </Link>
                                     <Link href="/auth/signup">
-                                        <MagneticButton style={{ fontSize: '0.9rem', padding: '0.75rem 1.75rem', background: '#2563eb', color: '#ffffff', fontWeight: 700, borderRadius: '14px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.2)' }}>
+                                        <MagneticButton style={{ 
+                                            fontSize: '0.95rem', padding: '0.75rem 1.75rem', 
+                                            background: 'var(--gradient-accent)', color: '#ffffff', 
+                                            fontWeight: 800, borderRadius: '14px', border: 'none', 
+                                            cursor: 'pointer', boxShadow: '0 8px 20px rgba(37, 99, 235, 0.25)' 
+                                        }}>
                                             Get Started
                                         </MagneticButton>
                                     </Link>
@@ -272,19 +296,25 @@ export default function Navbar() {
                         </div>
 
                         {/* Mobile Menu Icon */}
-                        <button
+                        <motion.button
                             className="mobile-only"
                             onClick={() => setIsOpen(true)}
-                            aria-label="Menu"
-                            style={{ padding: '8px', border: 'none', background: 'transparent', cursor: 'pointer', color: '#0f172a' }}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                            style={{ 
+                                width: '44px', height: '44px', borderRadius: '14px',
+                                border: '1px solid var(--border)', background: 'white', 
+                                cursor: 'pointer', color: '#0f172a',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}
                         >
-                            <Menu size={28} />
-                        </button>
+                            <Menu size={24} strokeWidth={2.5} />
+                        </motion.button>
                     </div>
                 </div>
             </motion.header>
 
-            {/* Spacing for fixed header */}
+            {/* Spacing */}
             <div style={{ height: '80px' }} />
 
             {/* Mobile Drawer */}
@@ -300,8 +330,7 @@ export default function Navbar() {
                             style={{
                                 position: 'fixed',
                                 inset: 0,
-                                background: 'rgba(15, 23, 42, 0.4)',
-                                backdropFilter: 'blur(12px)',
+                                background: 'rgba(2, 6, 23, 0.3)',
                                 zIndex: 100
                             }}
                         />
@@ -316,61 +345,69 @@ export default function Navbar() {
                                 right: 0,
                                 bottom: 0,
                                 width: '100%',
-                                maxWidth: '320px',
+                                maxWidth: '340px',
                                 background: '#ffffff',
-                                boxShadow: '-20px 0 60px -15px rgba(0, 0, 0, 0.1)',
-                                padding: '1.5rem',
+                                borderLeft: '1px solid var(--border)',
+                                padding: '2rem',
                                 zIndex: 101,
                                 display: 'flex',
                                 flexDirection: 'column'
                             }}
                         >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', paddingTop: '0.5rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                    <div style={{ width: '36px', height: '36px', background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800 }}>J</div>
-                                    <span style={{ fontWeight: 800, fontSize: '1.25rem', color: '#0f172a', letterSpacing: '-0.02em' }}>JobPortal</span>
+                                    <div style={{ width: '40px', height: '40px', background: 'var(--gradient-primary)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 900 }}>J</div>
+                                    <span style={{ fontWeight: 900, fontSize: '1.4rem', color: '#0f172a', letterSpacing: '-0.04em' }}>JobPortal</span>
                                 </div>
-                                <button
+                                <motion.button
+                                    whileHover={{ rotate: 90, scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
                                     onClick={() => setIsOpen(false)}
-                                    style={{ background: '#f1f5f9', border: 'none', cursor: 'pointer', color: '#0f172a', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                    style={{ background: '#f8fafc', border: '1px solid var(--border)', cursor: 'pointer', color: '#0f172a', width: '44px', height: '44px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                 >
-                                    <X size={20} />
-                                </button>
+                                    <X size={20} strokeWidth={2.5} />
+                                </motion.button>
                             </div>
 
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <motion.div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                 {navLinks.map((item) => {
                                     const isActive = pathname === item.href;
                                     return (
-                                        <Link
-                                            key={item.name}
-                                            href={item.href}
-                                            onClick={() => setIsOpen(false)}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '1rem',
-                                                padding: '1rem 1.25rem',
-                                                borderRadius: '16px',
-                                                fontSize: '1.1rem',
-                                                fontWeight: 600,
-                                                color: isActive ? '#2563eb' : '#475569',
-                                                background: isActive ? '#f0f7ff' : 'transparent',
-                                                textDecoration: 'none',
-                                                transition: 'all 0.2s'
-                                            }}
-                                        >
-                                            <div style={{ color: isActive ? '#2563eb' : '#94a3b8' }}>
-                                                {item.name === 'Home' && <Globe size={20} />}
-                                                {item.name === 'Jobs' && <Briefcase size={20} />}
-                                                {item.name === 'Companies' && <Search size={20} />}
-                                            </div>
-                                            {item.name}
-                                            {isActive && <motion.div layoutId="active-pill-mob" style={{ marginLeft: 'auto', width: '6px', height: '6px', borderRadius: '50%', background: '#2563eb' }} />}
-                                        </Link>
+                                        <motion.div key={item.name} variants={itemVariants}>
+                                            <Link
+                                                href={item.href}
+                                                onClick={() => setIsOpen(false)}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '1.25rem',
+                                                    padding: '1.25rem',
+                                                    borderRadius: '18px',
+                                                    fontSize: '1.15rem',
+                                                    fontWeight: 750,
+                                                    color: isActive ? '#2563eb' : '#475569',
+                                                    background: isActive ? 'var(--accent-soft)' : 'transparent',
+                                                    textDecoration: 'none',
+                                                    border: isActive ? '1px solid rgba(37, 99, 235, 0.1)' : '1px solid transparent',
+                                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                                                }}
+                                            >
+                                                <div style={{ 
+                                                    width: '44px', height: '44px', borderRadius: '12px',
+                                                    background: isActive ? 'white' : '#f8fafc',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    boxShadow: isActive ? '0 4px 12px rgba(37, 99, 235, 0.1)' : 'none'
+                                                }}>
+                                                    {item.name === 'Home' && <Globe size={22} />}
+                                                    {item.name === 'Jobs' && <Briefcase size={22} />}
+                                                    {item.name === 'Companies' && <Search size={22} />}
+                                                </div>
+                                                {item.name}
+                                            </Link>
+                                        </motion.div>
                                     );
                                 })}
-                            </div>
+                            </motion.div>
 
                             <div style={{ marginTop: 'auto', paddingTop: '2rem', borderTop: '1px solid #f1f5f9' }}>
                                 {user ? (

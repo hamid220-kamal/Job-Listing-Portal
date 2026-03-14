@@ -74,6 +74,7 @@ const userSchema = new mongoose.Schema({
         portfolio: { type: String, default: '' },
         twitter: { type: String, default: '' },
     },
+    bookmarks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Job' }],
 
     // — Employer-specific fields —
     company: { type: String, default: '', trim: true },

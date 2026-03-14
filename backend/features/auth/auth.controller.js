@@ -3,8 +3,8 @@ const axios = require('axios');
 const User = require('./user.model');
 const asyncHandler = require('express-async-handler');
 
-// Deployed Backend URL for Remote Auth Proxy
-const AUTH_SERVER_URL = 'https://job-listing-portal-ten-omega.vercel.app/api/auth';
+// Remote Auth Proxy URL - Fallback for local development if not in .env
+const AUTH_SERVER_URL = process.env.AUTH_SERVER_URL || 'https://job-listing-portal-ten-omega.vercel.app/api/auth';
 
 // Password strength validation
 const validatePassword = (password) => {
@@ -279,6 +279,27 @@ const logoutUser = asyncHandler(async (req, res) => {
     res.status(200).json({ message: 'Logged out successfully' });
 });
 
+// @desc    Forgot Password Request
+// @route   POST /api/auth/forgot-password
+// @access  Public
+const forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        res.status(400);
+        throw new Error('Please provide an email address');
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+
+    // For security, we ALWAYS return success even if user doesn't exist
+    // This prevents account enumeration
+    res.status(200).json({
+        success: true,
+        message: 'If an account exists with this email, recovery instructions have been sent.'
+    });
+});
+
 module.exports = {
     registerUser,
     loginUser,
@@ -286,4 +307,5 @@ module.exports = {
     validateToken,
     refreshToken,
     logoutUser,
+    forgotPassword,
 };

@@ -24,6 +24,11 @@ const jobSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please add salary range']
     },
+    category: {
+        type: String,
+        required: [true, 'Please add a category'],
+        enum: ['Engineering', 'Design', 'Marketing', 'Sales', 'Finance', 'Remote', 'Management', 'Healthcare', 'Education', 'Other']
+    },
     description: {
         type: String,
         required: [true, 'Please add a description']
@@ -59,10 +64,21 @@ const jobSchema = new mongoose.Schema({
 });
 
 // Add text index for keyword search
-jobSchema.index({ title: 'text', company: 'text', description: 'text' });
+jobSchema.index({ title: 'text', company: 'text', description: 'text', category: 'text' });
 
 // Add indexes for frequent filters
 jobSchema.index({ location: 1 });
 jobSchema.index({ type: 1 });
+jobSchema.index({ category: 1 });
+
+// CASCADING DELETE: Delete all applications for this job when it's deleted
+jobSchema.pre('deleteOne', { document: true, query: false }, async function (next) {
+    try {
+        await mongoose.model('Application').deleteMany({ job: this._id });
+        next();
+    } catch (err) {
+        next(err);
+    }
+});
 
 module.exports = mongoose.model('Job', jobSchema);

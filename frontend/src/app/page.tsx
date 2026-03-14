@@ -1,432 +1,243 @@
 "use client";
 
 import Link from 'next/link';
-import { motion, useScroll, useTransform, useSpring, useMotionValue, useMotionTemplate } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import Button from '@/components/Button';
 import JobFilter from '@/components/JobFilter';
 import JobCard from '@/components/JobCard';
 import FAQAccordion from '@/components/FAQAccordion';
-import { MOCK_JOBS } from '@/lib/mock_data';
-import { ArrowRight, CheckCircle, TrendingUp, Users, Shield, Zap, Globe, Award, Briefcase } from 'lucide-react';
-import { useRef, useState, useEffect } from 'react';
-
-// --- Components ---
-
-function CountUp({ to }: { to: number }) {
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    let start = 0;
-    const duration = 2000;
-    const increment = to / (duration / 16);
-    const timer = setInterval(() => {
-      start += increment;
-      if (start >= to) {
-        setCount(to);
-        clearInterval(timer);
-      } else {
-        setCount(Math.floor(start));
-      }
-    }, 16);
-    return () => clearInterval(timer);
-  }, [to]);
-
-  return <>{count.toLocaleString()}</>;
-}
-
-function InfiniteMarquee({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{ overflow: 'hidden', display: 'flex', maskImage: 'linear-gradient(to right, transparent, black 10%, black 90%, transparent)' }}>
-      <motion.div
-        animate={{ x: ["0%", "-50%"] }}
-        transition={{ repeat: Infinity, duration: 40, ease: "linear" }}
-        style={{ display: 'flex', gap: '4rem', whiteSpace: 'nowrap', paddingRight: '4rem', alignItems: 'center' }}
-      >
-        {children}
-        {children}
-      </motion.div>
-    </div>
-  );
-}
-
-function TiltCard({ children }: { children: React.ReactNode }) {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const rotateX = useTransform(y, [-100, 100], [5, -5]);
-  const rotateY = useTransform(x, [-100, 100], [-5, 5]);
-
-  return (
-    <motion.div
-      style={{ perspective: 1000 }}
-      onMouseMove={(e) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        x.set(e.clientX - centerX);
-        y.set(e.clientY - centerY);
-      }}
-      onMouseLeave={() => { x.set(0); y.set(0); }}
-    >
-      <motion.div style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}>
-        {children}
-      </motion.div>
-    </motion.div>
-  );
-}
+import { ArrowRight, TrendingUp, Shield, Zap, Globe, Award, Briefcase, Sparkles, CheckCircle2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import api from '@/utils/api';
+import CountUp from '@/components/CountUp';
+import InfiniteMarquee from '@/components/InfiniteMarquee';
 
 export default function Home() {
   const { scrollY } = useScroll();
   const heroY = useTransform(scrollY, [0, 500], [0, 150]);
   const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
 
+  const [trendingJobs, setTrendingJobs] = useState<any[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTrending = async () => {
+      try {
+        const { data } = await api.get('/search?limit=6');
+        setTrendingJobs(data.jobs || []);
+      } catch (err) {
+        console.error('Failed to fetch trending jobs:', err);
+      } finally {
+        setJobsLoading(false);
+      }
+    };
+    fetchTrending();
+  }, []);
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', overflowX: 'hidden', background: 'var(--background)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', overflowX: 'hidden', background: '#fff' }}>
 
       {/* --- HERO SECTION --- */}
-      <section style={{ position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', paddingTop: '80px', overflow: 'hidden', background: 'white' }}>
-
-        {/* Tech Mesh Background - Subtler for light theme */}
+      <section style={{ 
+        position: 'relative', minHeight: '100vh', display: 'flex', alignItems: 'center', 
+        paddingTop: '80px', overflow: 'hidden', background: 'white' 
+      }}>
+        {/* Advanced Grid Background */}
         <div style={{
           position: 'absolute', inset: 0, zIndex: 0,
-          backgroundImage: `radial-gradient(#e2e8f0 1.5px, transparent 1.5px)`,
-          backgroundSize: '48px 48px',
-          maskImage: 'radial-gradient(circle at center, black 30%, transparent 90%)',
+          backgroundImage: `linear-gradient(to right, #f1f5f9 2px, transparent 2px), linear-gradient(to bottom, #f1f5f9 2px, transparent 2px)`,
+          backgroundSize: '4rem 4rem',
+          maskImage: 'radial-gradient(ellipse 60% 50% at 50% 0%, #000 70%, transparent 100%)',
           opacity: 0.4
         }} />
 
-        {/* Gradient Orbs - Optimized for Light Theme */}
-        <motion.div
-          animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
-          transition={{ duration: 15, repeat: Infinity }}
-          style={{ position: 'absolute', top: '-10%', right: '5%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(59,130,246,0.15), transparent 70%)', filter: 'blur(80px)' }}
-        />
-        <motion.div
-          animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.3, 0.15] }}
-          transition={{ duration: 20, repeat: Infinity, delay: 5 }}
-          style={{ position: 'absolute', bottom: '0%', left: '-5%', width: '700px', height: '700px', background: 'radial-gradient(circle, rgba(99,102,241,0.1), transparent 70%)', filter: 'blur(100px)' }}
-        />
-
         <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-          <motion.div style={{ y: heroY, opacity: heroOpacity, margin: '0 auto', textAlign: 'center', maxWidth: '1100px' }}>
-
-            {/* Chip */}
-            <motion.div
-              initial={{ y: -50, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ type: "spring", bounce: 0.5 }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '99px', background: '#f1f5f9', border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 2px 10px rgba(0,0,0,0.02)', marginBottom: '2rem' }}
-            >
-              <div style={{ width: '8px', height: '8px', background: '#22c55e', borderRadius: '50%' }} />
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#475569' }}>Over 12,000+ New Jobs Added Today</span>
-            </motion.div>
-
-            {/* Headline */}
-            <motion.h1 style={{ fontSize: 'clamp(3rem, 7vw, 5.5rem)', fontWeight: 800, lineHeight: 1.1, letterSpacing: '-0.04em', marginBottom: '1.5rem', color: '#0f172a' }}>
-              Find a job that <br className="mobile-hide" />
-              <span style={{
-                background: 'linear-gradient(135deg, #1e293b 0%, #3b82f6 100%)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
-              }}>matches your passion.</span>
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              style={{ fontSize: '1.25rem', color: '#64748b', marginBottom: '3rem', maxWidth: '650px', marginInline: 'auto', lineHeight: 1.6 }}
-            >
-              The most advanced AI-powered platform designed to connect top-tier talent with world-class organizations.
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: '4rem', alignItems: 'center', textAlign: 'center' }}>
+            <motion.div 
+              initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginBottom: '5rem', flexWrap: 'wrap' }}
+              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+              style={{ y: heroY, opacity: heroOpacity }}
             >
-              <Link href="/jobs">
-                <motion.button
-                  whileHover={{ scale: 1.02, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  style={{
-                    padding: '1.25rem 3rem', borderRadius: '16px', background: '#2563eb', color: 'white',
-                    fontSize: '1.1rem', fontWeight: 600, border: 'none', cursor: 'pointer',
-                    boxShadow: '0 20px 40px -10px rgba(37, 99, 235, 0.3)'
-                  }}
-                >
-                  Browse Jobs
-                </motion.button>
-              </Link>
-              <Link href="/companies">
-                <motion.button
-                  whileHover={{ scale: 1.02, backgroundColor: '#f8fafc' }}
-                  whileTap={{ scale: 0.98 }}
-                  style={{
-                    padding: '1.25rem 3rem', borderRadius: '16px', background: 'white', color: '#1e293b',
-                    fontSize: '1.1rem', fontWeight: 600, border: '1px solid #e2e8f0', cursor: 'pointer',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)'
-                  }}
-                >
-                  View Companies
-                </motion.button>
-              </Link>
-            </motion.div>
-
-            {/* 3D Filter Container */}
-            <motion.div
-              initial={{ opacity: 0, y: 50, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ delay: 0.8, type: 'spring' }}
-            >
-              <JobFilter />
-            </motion.div>
-
-          </motion.div>
-        </div>
-      </section>
-
-      {/* --- TRUSTED BRANDS --- */}
-      <section style={{ padding: '3rem 0', background: 'white', borderBottom: '1px solid #f1f5f9' }}>
-        <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: '0.85rem', fontWeight: 700, marginBottom: '2rem', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Trusted by teams at world's best companies</p>
-        <InfiniteMarquee>
-          {['MICROSOFT', 'GOOGLE', 'AMAZON', 'NETFLIX', 'SPOTIFY', 'META', 'APPLE', 'TESLA', 'OPENAI', 'STRIPE', 'AIRBNB', 'UBER'].map((brand, i) => (
-            <span key={i} style={{ fontSize: '1.75rem', fontWeight: 800, color: '#e2e8f0', letterSpacing: '-0.02em', margin: '0 3rem' }}>{brand}</span>
-          ))}
-        </InfiniteMarquee>
-      </section>
-
-      {/* --- WHY CHOOSE US --- */}
-      <section className="container" style={{ padding: '8rem 1.5rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            <h2 style={{ fontSize: '3.5rem', fontWeight: 800, color: '#0f172a', marginBottom: '2rem', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
-              Why top professionals <br />
-              <span style={{ color: '#2563eb' }}>choose our platform.</span>
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-              {[
-                { title: 'AI-Powered Matching', desc: 'Our advanced algorithms match you with roles that truly fit your skills and career trajectory.', icon: Zap },
-                { title: 'Direct Access', desc: 'Skip the noise and connect directly with hiring managers at world-class companies.', icon: Users },
-                { title: 'Salary Transparency', desc: 'Make informed decisions with upfront salary expectations and market insights.', icon: TrendingUp }
-              ].map((item, i) => (
-                <div key={i} style={{ display: 'flex', gap: '1.5rem' }}>
-                  <div style={{ minWidth: '48px', height: '48px', borderRadius: '12px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
-                    <item.icon size={22} />
-                  </div>
-                  <div>
-                    <h4 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1e293b', marginBottom: '0.5rem' }}>{item.title}</h4>
-                    <p style={{ color: '#64748b', lineHeight: 1.6, fontSize: '1.05rem' }}>{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8 }}
-            style={{ position: 'relative' }}
-          >
-            <div style={{
-              width: '100%', aspectRatio: '1/1', background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
-              borderRadius: '32px', overflow: 'hidden', position: 'relative', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.1)'
-            }}>
-              <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop"
-                alt="Engagement" style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.9 }} />
-            </div>
-            {/* Floating Stats */}
-            <motion.div
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              style={{
-                position: 'absolute', top: '10%', right: '-5%', background: 'white', padding: '1.5rem',
-                borderRadius: '20px', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', border: '1px solid #f1f5f9'
-              }}
-            >
-              <div style={{ color: '#2563eb', fontWeight: 800, fontSize: '1.5rem' }}>92%</div>
-              <div style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 700 }}>MATCH RATE</div>
-            </motion.div>
-            <motion.div
-              animate={{ y: [0, 10, 0] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-              style={{
-                position: 'absolute', bottom: '10%', left: '-5%', background: 'white', padding: '1.5rem',
-                borderRadius: '20px', boxShadow: '0 20px 40px rgba(0,0,0,0.1)', border: '1px solid #f1f5f9'
-              }}
-            >
-              <div style={{ color: '#10b981', fontWeight: 800, fontSize: '1.5rem' }}>10k+</div>
-              <div style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 700 }}>SUCCESSFUL HIRES</div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* --- CATEGORIES --- */}
-      <section className="container" style={{ padding: '8rem 1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', marginBottom: '4rem', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <h2 style={{ fontSize: '3rem', fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>Explore by <br /><span style={{ color: '#2563eb' }}>Category</span></h2>
-          </div>
-          <Link href="/categories" style={{ color: '#2563eb', fontWeight: 600, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            View All Categories <ArrowRight size={18} />
-          </Link>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem' }}>
-          {[
-            { name: 'Engineering', icon: Briefcase, count: '1.2k jobs' },
-            { name: 'Design', icon: Award, count: '850 jobs' },
-            { name: 'Marketing', icon: TrendingUp, count: '600 jobs' },
-            { name: 'Sales', icon: Zap, count: '920 jobs' },
-            { name: 'Finance', icon: Shield, count: '340 jobs' },
-            { name: 'Remote', icon: Globe, count: '4.5k jobs' },
-          ].map((cat, i) => (
-            <motion.div
-              key={cat.name}
-              whileHover={{ y: -5, boxShadow: '0 20px 40px rgba(0,0,0,0.05)', borderColor: '#2563eb' }}
-              style={{
-                padding: '2rem', borderRadius: '24px', background: 'white', border: '1px solid #e2e8f0',
-                cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
-              }}
-            >
-              <div style={{ width: '56px', height: '56px', background: '#f1f5f9', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem', color: '#2563eb' }}>
-                <cat.icon size={26} />
-              </div>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '0.5rem', color: '#1e293b' }}>{cat.name}</h3>
-              <p style={{ color: '#64748b', fontSize: '0.95rem' }}>{cat.count}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* --- HOW IT WORKS (Light Mode) --- */}
-      <section style={{ padding: '10rem 0', background: '#f8fafc', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'rgba(0,0,0,0.05)' }} />
-
-        <div className="container">
-          <div style={{ textAlign: 'center', marginBottom: '6rem' }}>
-            <h2 style={{ fontSize: '3rem', fontWeight: 800, marginBottom: '1rem', color: '#0f172a' }}>Standard Recruitment Process</h2>
-            <p style={{ color: '#64748b', fontSize: '1.2rem' }}>Experience a seamless journey from browsing to joining your dream team.</p>
-          </div>
-
-          <div className="steps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '3rem' }}>
-            {[
-              { title: 'Create Account', desc: 'Sign up in seconds and build your professional profile to showcase your skills.', icon: Users, color: '#2563eb' },
-              { title: 'Upload Resume', desc: 'Our smart AI parses your resume to match you with roles that fit your expertise.', icon: Briefcase, color: '#8b5cf6' },
-              { title: 'Get Hired', desc: 'Connect directly with hiring managers, ace your interview, and land the job.', icon: CheckCircle, color: '#10b981' }
-            ].map((step, i) => (
+              {/* Premium Badge */}
               <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.2 }}
-                style={{ background: 'white', padding: '3.5rem 2.5rem', borderRadius: '24px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)' }}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 100, delay: 0.2 }}
+                style={{ 
+                  display: 'inline-flex', alignItems: 'center', gap: '0.6rem', 
+                  padding: '0.6rem 1.5rem', borderRadius: '99px', marginBottom: '3rem',
+                  background: '#f1f5f9', border: '1px solid #e2e8f0',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
+                }}
               >
-                <div style={{ width: '70px', height: '70px', background: `${step.color}15`, borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '2.5rem' }}>
-                  <step.icon size={32} color={step.color} />
-                </div>
-                <h3 style={{ fontSize: '1.6rem', fontWeight: 700, marginBottom: '1.25rem', color: '#1e293b' }}>{step.title}</h3>
-                <p style={{ color: '#64748b', lineHeight: 1.7, fontSize: '1.05rem' }}>{step.desc}</p>
+                <motion.span 
+                  animate={{ opacity: [1, 0.4, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  style={{ width: '10px', height: '10px', background: '#2563eb', borderRadius: '50%' }} 
+                />
+                <span style={{ fontSize: '0.9rem', fontWeight: 900, color: '#0f172a', letterSpacing: '0.05em' }}>
+                  THE FUTURE OF PROFESSIONAL CORRELATION
+                </span>
               </motion.div>
-            ))}
+
+              <motion.h1 style={{ 
+                fontSize: 'clamp(3.5rem, 9vw, 7.5rem)', fontWeight: 950, 
+                lineHeight: 0.9, letterSpacing: '-0.06em', marginBottom: '2.5rem', color: '#0f172a' 
+              }}>
+                Orchestrate your <br /> 
+                <span style={{
+                  background: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                  position: 'relative'
+                }}>
+                  professional era.
+                </span>
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                style={{ 
+                  fontSize: '1.45rem', color: '#475569', marginBottom: '4rem', 
+                  maxWidth: '800px', marginInline: 'auto', lineHeight: 1.5, fontWeight: 500
+                }}
+              >
+                Join an elite ecosystem where world-class talent converges with visionary organizations. 
+                Our AI-driven matching engine defines the new standard for executive placement.
+              </motion.p>
+
+              {/* Enhanced Hero Filter Integration */}
+              <motion.div
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                style={{ maxWidth: '1100px', margin: '0 auto 8rem' }}
+              >
+                <JobFilter />
+              </motion.div>
+
+              {/* Tech Stack / Trusted By Floating Logos */}
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.2 }}
+                style={{ display: 'flex', justifyContent: 'center', gap: '4rem', flexWrap: 'wrap', opacity: 0.5 }}
+              >
+                {['MICROSOFT', 'GOOGLE', 'META', 'STRIPE', 'AIRBNB'].map(b => (
+                   <span key={b} style={{ fontWeight: 900, fontSize: '1rem', letterSpacing: '0.2em' }}>{b}</span>
+                ))}
+              </motion.div>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* --- TRENDING JOBS --- */}
-      <section className="container" style={{ padding: '8rem 1.5rem' }}>
-        <div style={{ marginBottom: '5rem', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '3.5rem', fontWeight: 800, marginBottom: '1.25rem', color: '#0f172a', letterSpacing: '-0.02em' }}>Trending Opportunities</h2>
-          <p style={{ color: '#64748b', fontSize: '1.25rem' }}>Hand-picked jobs from global industry leaders.</p>
-        </div>
+      {/* --- ELITE SPECIALIZATIONS (BENTO) --- */}
+      <section style={{ padding: '12rem 0', background: 'white' }}>
+        <div className="container">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            style={{ textAlign: 'center', marginBottom: '8rem' }}
+          >
+            <h2 style={{ fontSize: '4.5rem', fontWeight: 950, color: '#0f172a', letterSpacing: '-0.05em', lineHeight: 1 }}>
+              Elite <span style={{ color: '#2563eb' }}>Specializations.</span>
+            </h2>
+            <p style={{ color: '#64748b', fontSize: '1.4rem', marginTop: '2rem', fontWeight: 500, maxWidth: '600px', marginInline: 'auto' }}>
+              Precision-categorized pathways for high-impact professionals.
+            </p>
+          </motion.div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '2.5rem' }}>
-          {MOCK_JOBS.slice(0, 6).map((job, i) => (
-            <TiltCard key={job.id}>
+          <div style={{ 
+            display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', 
+            gridAutoRows: '400px', gap: '2rem' 
+          }}>
+            {[
+              { name: 'Engineering', icon: Zap, count: '2.4k', grid: 'span 2 / span 1', bg: '#0f172a', color: 'white' },
+              { name: 'Architecture', icon: Award, count: '450', grid: 'span 1 / span 1', bg: '#eff6ff', color: '#2563eb' },
+              { name: 'Product', icon: Globe, count: '890', grid: 'span 1 / span 1', bg: '#f5f3ff', color: '#7c3aed' },
+              { name: 'Design', icon: Sparkles, count: '1.1k', grid: 'span 1 / span 1', bg: '#f8fafc', color: '#0f172a' },
+              { name: 'Strategy', icon: TrendingUp, count: '340', grid: 'span 1 / span 1', bg: '#fff7ed', color: '#ea580c' },
+              { name: 'Executive', icon: Shield, count: '120+', grid: 'span 2 / span 1', bg: 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)', color: 'white' },
+            ].map((cat, i) => (
               <motion.div
+                key={cat.name}
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -8 }}
-                style={{ height: '100%' }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.8 }}
+                whileHover={{ y: -15, scale: 1.02 }}
+                style={{
+                  gridArea: cat.grid,
+                  padding: '3.5rem', borderRadius: '48px', 
+                  background: cat.bg, color: cat.color,
+                  border: '1px solid #f1f5f9',
+                  display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                  cursor: 'pointer', position: 'relative', overflow: 'hidden',
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.03)'
+                }}
               >
-                <JobCard {...job} />
-              </motion.div>
-            </TiltCard>
-          ))}
-        </div>
-
-        <div style={{ marginTop: '5rem', textAlign: 'center' }}>
-          <Link href="/jobs">
-            <Button variant="outline" size="lg" style={{ borderRadius: '14px', padding: '1rem 3rem', fontWeight: 700 }}>View All Opportunities</Button>
-          </Link>
-        </div>
-      </section>
-
-      {/* --- STATS PARALLAX --- */}
-      <section style={{ position: 'relative', padding: '10rem 0', overflow: 'hidden', background: '#0f172a', color: 'white' }}>
-        <div style={{ position: 'absolute', inset: 0, opacity: 0.1 }}>
-          <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop" alt="stats-bg" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </div>
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, #0f172a, transparent, #0f172a)' }} />
-
-        <div className="container" style={{ position: 'relative', zIndex: 10 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '4rem', textAlign: 'center' }}>
-            {[
-              { label: 'Active Jobs', value: 12540 },
-              { label: 'Companies', value: 850 },
-              { label: 'Hires', value: 45000 },
-              { label: 'Candidates', value: 120000 }
-            ].map((stat, i) => (
-              <div key={i}>
-                <div style={{ fontSize: '4rem', fontWeight: 800, marginBottom: '0.5rem', background: 'linear-gradient(to bottom, #ffffff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                  <CountUp to={stat.value} />+
+                <div style={{ position: 'relative', zIndex: 2 }}>
+                  <cat.icon size={48} strokeWidth={2.5} style={{ marginBottom: '2.5rem' }} />
+                  <h3 style={{ fontSize: '2.25rem', fontWeight: 950, marginBottom: '0.75rem', letterSpacing: '-0.04em' }}>{cat.name}</h3>
+                  <p style={{ opacity: 0.8, fontSize: '1.2rem', fontWeight: 700 }}>{cat.count} VERIFIED ROLES</p>
                 </div>
-                <div style={{ color: '#94a3b8', fontSize: '1.2rem', fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{stat.label}</div>
-              </div>
+                <div style={{ position: 'relative', zIndex: 2, display: 'flex', alignItems: 'center', gap: '1rem', fontWeight: 900, fontSize: '1.1rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Explore Track <ArrowRight size={24} strokeWidth={3.5} />
+                </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* --- FAQ SECTION --- */}
-      <section className="container" style={{ padding: '10rem 1.5rem', maxWidth: '1000px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '5rem' }}>
-          <h2 style={{ fontSize: '3.5rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>Common Questions</h2>
-          <p style={{ color: '#64748b', marginTop: '1.25rem', fontSize: '1.2rem' }}>Everything you need to know about the platform.</p>
+      {/* --- STATS OVERLAY --- */}
+      <section style={{ padding: '15rem 0', background: '#0f172a', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, opacity: 0.1, filter: 'grayscale(100%)' }}>
+           <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
-        <FAQAccordion items={[
-          { q: "Is this platform really free for job seekers?", a: "Yes, completely. You can create a profile, upload your resume, and apply to as many jobs as you want without paying a dime." },
-          { q: "How does the AI matching algorithm work?", a: "Our proprietary AI analyzes your skills, experience, and career goals to match you with roles where you're most likely to succeed. It learns from your interactions to get smarter over time." },
-          { q: "Can companies contact me directly?", a: "Yes. If your profile is public, verified recruiters can invite you to apply for roles that match your expertise." },
-          { q: "What makes this different from LinkedIn?", a: "We focus purely on hiring. No social feed, no noise. Just high-quality job listings, salary transparency, and direct connections to hiring managers." }
-        ]} />
+        <div className="container" style={{ position: 'relative', zIndex: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '8rem', textAlign: 'center' }}>
+            {[
+              { label: 'GLOBAL PARTNERS', value: 2400 },
+              { label: 'SUCCESSFUL PLACEMENTS', value: 15800 },
+              { label: 'ACTIVE DISCOVERY', value: 950, symbol: 'k' },
+              { label: 'AVERAGE SALARY BUMP', value: 45, symbol: '%' }
+            ].map((stat, i) => (
+              <motion.div key={i} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} transition={{ delay: i * 0.2 }}>
+                <div style={{ fontSize: '6rem', fontWeight: 950, color: '#fff', letterSpacing: '-0.05em', lineHeight: 1 }}>
+                  <CountUp to={stat.value} />{stat.symbol || '+'}
+                </div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#2563eb', letterSpacing: '0.2em', marginTop: '1.5rem' }}>{stat.label}</div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </section>
 
-      {/* --- CTA SECTION --- */}
-      <section style={{ padding: '8rem 0', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', color: 'white', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-        <div style={{
-          position: 'absolute', inset: 0, opacity: 0.1,
-          backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
-          backgroundSize: '32px 32px'
-        }} />
-        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-          <h2 style={{ fontSize: '3.5rem', fontWeight: 800, marginBottom: '1.5rem', letterSpacing: '-0.02em' }}>Ready to shape your future?</h2>
-          <p style={{ fontSize: '1.4rem', opacity: 0.8, marginBottom: '3.5rem', maxWidth: '700px', margin: '0 auto 3.5rem', lineHeight: 1.6 }}>Join over 100,000 professionals who have found their dream job using our platform.</p>
-          <Link href="/auth/signup">
-            <motion.button
-              whileHover={{ scale: 1.05, boxShadow: '0 20px 40px rgba(37, 99, 235, 0.3)' }}
-              whileTap={{ scale: 0.95 }}
-              style={{ padding: '1.5rem 4rem', background: '#2563eb', color: 'white', border: 'none', borderRadius: '16px', fontSize: '1.25rem', fontWeight: 700, cursor: 'pointer' }}
-            >
-              Get Started Now
-            </motion.button>
-          </Link>
+      {/* --- FINAL CTA --- */}
+      <section style={{ padding: '12rem 0', background: '#fff', textAlign: 'center' }}>
+        <div className="container" style={{ maxWidth: '1000px' }}>
+          <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <h2 style={{ fontSize: '5.5rem', fontWeight: 950, color: '#0f172a', letterSpacing: '-0.06em', lineHeight: 0.9, marginBottom: '3rem' }}>
+              Your sovereign <br /> career <span style={{ color: '#2563eb' }}>awaits.</span>
+            </h2>
+            <p style={{ fontSize: '1.6rem', color: '#475569', marginBottom: '5rem', fontWeight: 500, lineHeight: 1.5 }}>
+              Join the pinnacle of professional networking. <br />
+              Secure your place among the world's most innovative builders.
+            </p>
+            <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link href="/auth/signup" style={{ textDecoration: 'none' }}>
+                <Button variant="primary" size="xl" style={{ boxShadow: '0 30px 60px rgba(37, 99, 235, 0.3)' }}>Initialize Profile</Button>
+              </Link>
+              <Link href="/jobs" style={{ textDecoration: 'none' }}>
+                <Button variant="outline" size="xl">Browse Opportunities</Button>
+              </Link>
+            </div>
+          </motion.div>
         </div>
       </section>
 

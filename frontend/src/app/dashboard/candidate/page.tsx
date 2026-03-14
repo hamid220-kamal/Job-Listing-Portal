@@ -3,7 +3,13 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+    Briefcase, Bookmark, Star, CheckCircle, 
+    ArrowRight, MapPin, Calendar, Clock,
+    LayoutDashboard, User, Settings, Search,
+    Loader2, AlertCircle, TrendingUp
+} from 'lucide-react';
 import Button from '@/components/Button';
 import Link from 'next/link';
 import api from '@/utils/api';
@@ -31,32 +37,33 @@ interface RecommendedJob {
 interface DashboardData {
     stats: {
         totalApplications: number;
+        totalBookmarks: number;
         pending: number; reviewed: number;
         shortlisted: number; rejected: number; accepted: number;
     };
     completeness: { score: number; missing: string[] };
     applications: Application[];
     recommendedJobs: RecommendedJob[];
+    savedJobs: RecommendedJob[];
 }
 
 /* ─── Status styling ─── */
-const statusStyle: Record<string, { bg: string; color: string; label: string }> = {
-    pending: { bg: '#fef3c7', color: '#92400e', label: 'Pending' },
-    reviewed: { bg: '#dbeafe', color: '#1e40af', label: 'Reviewed' },
-    shortlisted: { bg: '#d1fae5', color: '#065f46', label: 'Shortlisted' },
-    rejected: { bg: '#fee2e2', color: '#991b1b', label: 'Rejected' },
-    accepted: { bg: '#d1fae5', color: '#14532d', label: 'Accepted' },
+const statusStyle: Record<string, { bg: string; color: string; label: string; icon: any }> = {
+    pending: { bg: '#fff7ed', color: '#c2410c', label: 'Pending', icon: Clock },
+    reviewed: { bg: '#eff6ff', color: '#1d4ed8', label: 'Reviewed', icon: Search },
+    shortlisted: { bg: '#f0fdf4', color: '#15803d', label: 'Shortlisted', icon: Star },
+    rejected: { bg: '#fef2f2', color: '#b91c1c', label: 'Rejected', icon: AlertCircle },
+    accepted: { bg: '#f0fdfa', color: '#0f766e', label: 'Hired', icon: CheckCircle },
 };
 
-/* ─── Stat card icons ─── */
+/* ─── Stat card definitions ─── */
 const statCards = [
-    { key: 'totalApplications', label: 'Total Applied', icon: '📋', accent: '#6366f1' },
-    { key: 'shortlisted', label: 'Shortlisted', icon: '⭐', accent: '#f59e0b' },
-    { key: 'accepted', label: 'Accepted', icon: '✅', accent: '#10b981' },
-    { key: 'rejected', label: 'Rejected', icon: '❌', accent: '#ef4444' },
+    { key: 'totalApplications', label: 'Applications', icon: Briefcase, accent: '#2563eb' },
+    { key: 'totalBookmarks', label: 'Saved', icon: Bookmark, accent: '#7c3aed' },
+    { key: 'shortlisted', label: 'Shortlisted', icon: Star, accent: '#ca8a04' },
+    { key: 'accepted', label: 'Hired', icon: CheckCircle, accent: '#059669' },
 ];
 
-/* ─── Application filter tabs ─── */
 const filterTabs = ['all', 'pending', 'reviewed', 'shortlisted', 'accepted', 'rejected'] as const;
 
 export default function CandidateDashboard() {
@@ -97,8 +104,8 @@ export default function CandidateDashboard() {
 
     if (authLoading || !user || user.role !== 'candidate') {
         return (
-            <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <p style={{ color: 'var(--muted-foreground)' }}>Loading...</p>
+            <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+                <Loader2 className="spin" size={40} color="#2563eb" />
             </div>
         );
     }
@@ -108,206 +115,429 @@ export default function CandidateDashboard() {
     const barColor = (completeness?.score ?? 0) >= 80 ? '#10b981' : (completeness?.score ?? 0) >= 50 ? '#f59e0b' : '#ef4444';
 
     return (
-        <div className="container" style={{ padding: '2rem 1.5rem 4rem', maxWidth: 960 }}>
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-
-                {/* ── Header ── */}
-                <header style={{ marginBottom: '2rem' }}>
-                    <h1 style={{ fontSize: '1.75rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
-                        Welcome back, {user.name?.split(' ')[0]}! 👋
-                    </h1>
-                    <p style={{ color: 'var(--muted-foreground)', fontSize: '0.9rem', marginTop: '0.25rem' }}>
-                        Here's your career overview and recent activity.
-                    </p>
-                </header>
-
-                {/* ── Stat Cards ── */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-                    {statCards.map((sc, i) => (
-                        <motion.div key={sc.key}
-                            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.08 }}
-                            style={{
-                                padding: '1.25rem', borderRadius: 'var(--radius-lg)',
-                                border: '1px solid var(--border)', background: 'var(--surface)',
-                                display: 'flex', alignItems: 'center', gap: '1rem',
-                            }}
-                        >
-                            <div style={{
-                                width: 44, height: 44, borderRadius: 12, display: 'flex',
-                                alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem',
-                                background: `${sc.accent}15`, flexShrink: 0,
-                            }}>{sc.icon}</div>
-                            <div>
-                                <p style={{ fontSize: '1.5rem', fontWeight: 800, lineHeight: 1 }}>
-                                    {loading ? '–' : (stats as any)?.[sc.key] ?? 0}
-                                </p>
-                                <p style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', marginTop: 2 }}>{sc.label}</p>
+        <div style={{ background: '#f8fafc', minHeight: '100vh', paddingTop: '6rem', paddingBottom: '6rem' }}>
+            <div className="container" style={{ maxWidth: '1200px' }}>
+                <motion.div 
+                    initial={{ opacity: 0, y: 30 }} 
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                >
+                    {/* ── Dashboard Header ── */}
+                    <header style={{ 
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', 
+                        marginBottom: '3rem', flexWrap: 'wrap', gap: '2rem' 
+                    }}>
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                                <span style={{ 
+                                    background: 'var(--accent-soft)', color: '#2563eb', 
+                                    padding: '0.5rem 1rem', borderRadius: '100px', fontSize: '0.85rem', fontWeight: 800 
+                                }}>
+                                    CANDIDATE DASHBOARD
+                                </span>
                             </div>
-                        </motion.div>
-                    ))}
-                </div>
-
-                {/* ── Profile Completeness ── */}
-                {completeness && completeness.score < 100 && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-                        style={{
-                            padding: '1.25rem 1.5rem', borderRadius: 'var(--radius-lg)',
-                            border: '1px solid var(--border)', background: 'var(--surface)',
-                            marginBottom: '2rem',
-                        }}
-                    >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>Profile Strength</span>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: barColor }}>{completeness.score}%</span>
-                        </div>
-                        <div style={{ height: 8, borderRadius: 4, background: 'var(--secondary)', overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: `${completeness.score}%`, borderRadius: 4, background: barColor, transition: 'width 0.7s ease' }} />
-                        </div>
-                        {completeness.missing.length > 0 && (
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginTop: '0.5rem' }}>
-                                {completeness.missing.map(m => (
-                                    <Link key={m} href="/dashboard/candidate/profile" style={{ textDecoration: 'none' }}>
-                                        <span style={{
-                                            fontSize: '0.7rem', padding: '0.2rem 0.5rem', borderRadius: '999px',
-                                            background: 'rgba(37,99,235,0.08)', color: 'var(--accent)', fontWeight: 500, cursor: 'pointer',
-                                        }}>+ {m}</span>
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                    </motion.div>
-                )}
-
-                {/* ── Quick Actions ── */}
-                <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-                    <Link href="/jobs"><Button size="sm">🔍 Browse Jobs</Button></Link>
-                    <Link href={`/profile/candidate/${user._id}`}><Button variant="outline" size="sm">👤 My Public Profile</Button></Link>
-                    <Link href="/dashboard/candidate/profile"><Button variant="outline" size="sm">✏️ Edit Profile</Button></Link>
-                </div>
-
-                {/* ── Applications Section ── */}
-                <section style={{ marginBottom: '2.5rem' }}>
-                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '1rem' }}>📋 My Applications</h2>
-
-                    {/* Filter tabs */}
-                    <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--border)', marginBottom: '1rem', overflowX: 'auto' }}>
-                        {filterTabs.map(tab => (
-                            <button key={tab} onClick={() => setAppFilter(tab)}
-                                style={{
-                                    padding: '0.5rem 1rem', fontSize: '0.8rem', fontWeight: appFilter === tab ? 600 : 500,
-                                    color: appFilter === tab ? 'var(--foreground)' : 'var(--muted-foreground)',
-                                    background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-                                    borderBottom: appFilter === tab ? '2px solid var(--foreground)' : '2px solid transparent',
-                                    whiteSpace: 'nowrap', textTransform: 'capitalize',
-                                }}
-                            >{tab === 'all' ? `All (${data?.applications.length ?? 0})` : `${tab} (${(stats as any)?.[tab] ?? 0})`}</button>
-                        ))}
-                    </div>
-
-                    {loading ? (
-                        <p style={{ color: 'var(--muted-foreground)', textAlign: 'center', padding: '3rem' }}>Loading…</p>
-                    ) : filteredApps.length === 0 ? (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                            style={{
-                                textAlign: 'center', padding: '3rem 2rem',
-                                border: '2px dashed var(--border)', borderRadius: 'var(--radius-lg)',
-                            }}
-                        >
-                            <p style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.35rem' }}>
-                                {appFilter === 'all' ? 'No applications yet' : `No ${appFilter} applications`}
+                            <h1 style={{ fontSize: 'clamp(2rem, 4vw, 2.75rem)', fontWeight: 900, letterSpacing: '-0.04em', color: '#0f172a' }}>
+                                Welcome, <span style={{ color: '#2563eb' }}>{user.name?.split(' ')[0]}</span>.
+                            </h1>
+                            <p style={{ color: '#64748b', fontSize: '1.1rem', marginTop: '0.5rem', fontWeight: 500 }}>
+                                Your career progress is looking sharp. Here's what's happening today.
                             </p>
-                            <p style={{ color: 'var(--muted-foreground)', marginBottom: '1rem', fontSize: '0.85rem' }}>
-                                {appFilter === 'all' ? 'Start applying to jobs to track your progress!' : 'Check back later.'}
-                            </p>
-                            {appFilter === 'all' && (
-                                <Link href="/jobs"><Button size="sm">Browse Jobs</Button></Link>
-                            )}
-                        </motion.div>
-                    ) : (
-                        <div style={{ display: 'grid', gap: '0.75rem' }}>
-                            {filteredApps.map((app, i) => {
-                                const st = statusStyle[app.status] || statusStyle.pending;
-                                return (
-                                    <motion.div key={app._id}
-                                        initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: i * 0.04 }}
+                        </div>
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            <Link href="/dashboard/candidate/profile">
+                                <motion.button 
+                                    whileHover={{ y: -2 }}
+                                    style={{ 
+                                        padding: '0.85rem 1.5rem', borderRadius: '16px', border: '1px solid var(--border)',
+                                        background: 'white', color: '#0f172a', fontWeight: 700, fontSize: '0.95rem',
+                                        display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer',
+                                        boxShadow: 'var(--shadow-sm)'
+                                    }}
+                                >
+                                    <User size={18} /> Edit Profile
+                                </motion.button>
+                            </Link>
+                            <Link href="/jobs">
+                                <motion.button 
+                                    whileHover={{ y: -2, scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    style={{ 
+                                        padding: '0.85rem 2.5rem', borderRadius: '16px', border: 'none',
+                                        background: '#0f172a', color: 'white', fontWeight: 800, fontSize: '0.95rem',
+                                        display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer',
+                                        boxShadow: '0 10px 25px rgba(15, 23, 42, 0.15)'
+                                    }}
+                                >
+                                    Find Jobs <ArrowRight size={18} strokeWidth={3} />
+                                </motion.button>
+                            </Link>
+                        </div>
+                    </header>
+
+                    {/* ── Main Dashboard Layout Grid ── */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '2.5rem', alignItems: 'start' }}>
+                        
+                        {/* LEFT COLUMN: Stats & Applications */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+                            
+                            {/* Analytics Grid */}
+                            <div style={{ 
+                                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
+                                gap: '1.25rem' 
+                            }}>
+                                {statCards.map((sc, i) => (
+                                    <motion.div 
+                                        key={sc.key}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: i * 0.1 }}
+                                        whileHover={{ y: -5, boxShadow: 'var(--shadow-md)' }}
                                         style={{
-                                            border: '1px solid var(--border)', borderRadius: 'var(--radius)',
-                                            padding: '1rem 1.25rem', background: 'var(--surface)',
-                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                            flexWrap: 'wrap', gap: '0.75rem',
+                                            padding: '1.75rem', borderRadius: '32px',
+                                            border: '1px solid var(--border)', background: 'white',
+                                            display: 'flex', flexDirection: 'column', gap: '1.25rem',
+                                            transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                                            position: 'relative', overflow: 'hidden'
                                         }}
                                     >
-                                        <div style={{ flex: 1, minWidth: 200 }}>
-                                            <Link href={`/jobs/${app.job._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                                                <h3 style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: 2 }}>{app.job.title}</h3>
-                                            </Link>
-                                            <p style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>
-                                                {app.job.company} · {app.job.location}
-                                                {app.job.type && ` · ${app.job.type}`}
-                                            </p>
-                                            <p style={{ fontSize: '0.7rem', color: 'var(--muted-foreground)', marginTop: 4 }}>
-                                                Applied {new Date(app.appliedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                        <div style={{
+                                            width: 52, height: 52, borderRadius: '16px', 
+                                            background: `${sc.accent}10`, color: sc.accent,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                        }}>
+                                            <sc.icon size={26} strokeWidth={2.5} />
+                                        </div>
+                                        <div>
+                                            <h3 style={{ fontSize: '2.25rem', fontWeight: 900, color: '#0f172a', lineHeight: 1, marginBottom: '0.5rem' }}>
+                                                {loading ? <Loader2 size={24} className="spin" /> : (stats as any)?.[sc.key] ?? 0}
+                                            </h3>
+                                            <p style={{ fontSize: '0.95rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                {sc.label}
                                             </p>
                                         </div>
-                                        <span style={{
-                                            padding: '0.3rem 0.7rem', borderRadius: '999px', fontSize: '0.75rem',
-                                            fontWeight: 600, background: st.bg, color: st.color, whiteSpace: 'nowrap',
-                                        }}>{st.label}</span>
+                                        <div style={{
+                                            position: 'absolute', right: '-10px', bottom: '-10px',
+                                            opacity: 0.03, color: sc.accent
+                                        }}>
+                                            <sc.icon size={120} />
+                                        </div>
                                     </motion.div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </section>
+                                ))}
+                            </div>
 
-                {/* ── Recommended Jobs ── */}
-                {(data?.recommendedJobs?.length ?? 0) > 0 && (
-                    <section>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                            <h2 style={{ fontSize: '1.15rem', fontWeight: 700 }}>💡 Recommended Jobs</h2>
-                            <Link href="/jobs" style={{ fontSize: '0.8rem', color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>View all →</Link>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
-                            {data!.recommendedJobs.map((job, i) => (
-                                <motion.div key={job._id}
-                                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.06 }}
-                                    style={{
-                                        border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)',
-                                        padding: '1.25rem', background: 'var(--surface)',
-                                        display: 'flex', flexDirection: 'column', gap: '0.5rem',
-                                        transition: 'box-shadow 0.2s',
-                                    }}
-                                    whileHover={{ boxShadow: '0 4px 24px rgba(0,0,0,0.08)' }}
-                                >
-                                    <h3 style={{ fontWeight: 600, fontSize: '0.95rem' }}>{job.title}</h3>
-                                    <p style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>{job.company} · {job.location}</p>
-                                    <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginTop: 'auto' }}>
-                                        {job.type && (
-                                            <span style={{
-                                                fontSize: '0.7rem', padding: '0.15rem 0.5rem', borderRadius: '999px',
-                                                background: 'var(--secondary)', border: '1px solid var(--border)',
-                                            }}>{job.type}</span>
-                                        )}
-                                        {job.salary && (
-                                            <span style={{
-                                                fontSize: '0.7rem', padding: '0.15rem 0.5rem', borderRadius: '999px',
-                                                background: '#d1fae5', color: '#065f46',
-                                            }}>{job.salary}</span>
+                            {/* Active Applications Section */}
+                            <div style={{ 
+                                background: 'white', borderRadius: '40px', padding: '2.5rem',
+                                border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)'
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem' }}>
+                                    <div>
+                                        <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>Application History</h2>
+                                        <p style={{ color: '#64748b', fontWeight: 500 }}>Track your live recruitment journeys.</p>
+                                    </div>
+                                    <div style={{ display: 'flex', background: '#f1f5f9', padding: '0.35rem', borderRadius: '16px', gap: '0.25rem', overflowX: 'auto' }}>
+                                        {filterTabs.slice(0, 4).map(tab => (
+                                            <button 
+                                                key={tab} 
+                                                onClick={() => setAppFilter(tab)}
+                                                style={{
+                                                    padding: '0.6rem 1.25rem', borderRadius: '12px', fontSize: '0.85rem', 
+                                                    fontWeight: 800, cursor: 'pointer', border: 'none',
+                                                    background: appFilter === tab ? 'white' : 'transparent',
+                                                    color: appFilter === tab ? '#0f172a' : '#64748b',
+                                                    boxShadow: appFilter === tab ? '0 4px 12px rgba(0,0,0,0.05)' : 'none',
+                                                    transition: 'all 0.2s', whiteSpace: 'nowrap', textTransform: 'capitalize'
+                                                }}
+                                            >
+                                                {tab}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {loading ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                        {[1, 2, 3].map(i => (
+                                            <div key={i} style={{ height: '100px', background: '#f8fafc', borderRadius: '24px', animation: 'pulse 1.5s infinite' }} />
+                                        ))}
+                                    </div>
+                                ) : filteredApps.length === 0 ? (
+                                    <div style={{ 
+                                        textAlign: 'center', padding: '5rem 2rem', 
+                                        borderRadius: '32px', background: '#f8fafc', border: '2px dashed #e2e8f0' 
+                                    }}>
+                                        <div style={{ fontSize: '3rem', marginBottom: '1.5rem', opacity: 0.5 }}>📂</div>
+                                        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.5rem' }}>No records found</h3>
+                                        <p style={{ color: '#64748b', marginBottom: '2rem', fontWeight: 500 }}>
+                                            You haven't made any applications in this category yet.
+                                        </p>
+                                        <Link href="/jobs">
+                                            <Button size="sm" variant="outline">Browse Opportunities</Button>
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                        <AnimatePresence mode="popLayout">
+                                            {filteredApps.map((app, i) => {
+                                                const st = statusStyle[app.status] || statusStyle.pending;
+                                                return (
+                                                    <motion.div 
+                                                        key={app._id}
+                                                        layout
+                                                        initial={{ opacity: 0, x: -20 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        exit={{ opacity: 0, scale: 0.95 }}
+                                                        transition={{ delay: i * 0.05 }}
+                                                        whileHover={{ x: 5, background: '#f8fafc' }}
+                                                        style={{
+                                                            padding: '1.5rem', borderRadius: '24px', border: '1px solid #f1f5f9',
+                                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                            gap: '1.5rem', transition: 'all 0.2s', cursor: 'pointer'
+                                                        }}
+                                                        onClick={() => router.push(`/jobs/${app.job._id}`)}
+                                                    >
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flex: 1 }}>
+                                                            <div style={{ 
+                                                                width: 54, height: 54, borderRadius: '16px', 
+                                                                background: 'white', border: '1px solid #e2e8f0',
+                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                fontWeight: 900, color: '#0f172a', fontSize: '1.2rem',
+                                                                boxShadow: '0 4px 10px rgba(0,0,0,0.02)'
+                                                            }}>
+                                                                {app.job.company.charAt(0)}
+                                                            </div>
+                                                            <div>
+                                                                <h3 style={{ fontWeight: 800, fontSize: '1.1rem', color: '#0f172a', marginBottom: '0.25rem' }}>{app.job.title}</h3>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: '#64748b', fontSize: '0.9rem', fontWeight: 600 }}>
+                                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                                        <TrendingUp size={14} /> {app.job.company}
+                                                                    </span>
+                                                                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                                        <MapPin size={14} /> {app.job.location}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
+                                                            <div style={{ 
+                                                                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                                                padding: '0.4rem 1rem', borderRadius: '100px',
+                                                                background: st.bg, color: st.color, fontSize: '0.8rem', fontWeight: 800
+                                                            }}>
+                                                                <st.icon size={14} strokeWidth={3} /> {st.label.toUpperCase()}
+                                                            </div>
+                                                            <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>
+                                                                {new Date(app.appliedAt).toLocaleDateString()}
+                                                            </span>
+                                                        </div>
+                                                    </motion.div>
+                                                );
+                                            })}
+                                        </AnimatePresence>
+                                        {filteredApps.length > 5 && (
+                                            <button style={{ 
+                                                marginTop: '1rem', background: 'none', border: 'none', 
+                                                color: '#2563eb', fontWeight: 800, cursor: 'pointer',
+                                                fontSize: '0.95rem', display: 'flex', alignItems: 'center', 
+                                                gap: '0.5rem', alignSelf: 'center' 
+                                            }}>
+                                                View all applications <ArrowRight size={18} />
+                                            </button>
                                         )}
                                     </div>
-                                    <Link href={`/jobs/${job._id}`} style={{ marginTop: '0.5rem' }}>
-                                        <Button variant="outline" size="sm" style={{ width: '100%' }}>View Details</Button>
-                                    </Link>
-                                </motion.div>
-                            ))}
+                                )}
+                            </div>
                         </div>
-                    </section>
-                )}
 
-            </motion.div>
+                        {/* RIGHT COLUMN: Sidebar (Profile & Saved) */}
+                        <aside style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+                            
+                            {/* Profile Strength Card */}
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.2 }}
+                                style={{
+                                    padding: '2rem', borderRadius: '40px', background: '#0f172a', color: 'white',
+                                    position: 'relative', overflow: 'hidden', boxShadow: '0 20px 40px rgba(15, 23, 42, 0.2)'
+                                }}
+                            >
+                                <div style={{ position: 'relative', zIndex: 1 }}>
+                                    <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '1.5rem', letterSpacing: '-0.02em' }}>Profile Strength</h3>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                                        <span style={{ fontSize: '2.5rem', fontWeight: 900, color: barColor }}>{completeness?.score ?? 0}%</span>
+                                        <Link href="/dashboard/candidate/profile">
+                                            <div style={{ 
+                                                width: 40, height: 40, borderRadius: '50%', background: 'rgba(255,255,255,0.1)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white'
+                                            }}>
+                                                <ArrowRight size={20} />
+                                            </div>
+                                        </Link>
+                                    </div>
+                                    <div style={{ height: 10, borderRadius: '10px', background: 'rgba(255,255,255,0.1)', overflow: 'hidden', marginBottom: '1.5rem' }}>
+                                        <motion.div 
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${completeness?.score ?? 0}%` }}
+                                            transition={{ duration: 1, ease: 'easeOut' }}
+                                            style={{ height: '100%', borderRadius: '10px', background: barColor }}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                        {completeness?.missing.slice(0, 3).map(m => (
+                                            <span key={m} style={{ 
+                                                fontSize: '0.75rem', padding: '0.35rem 0.75rem', borderRadius: '8px',
+                                                background: 'rgba(255,255,255,0.05)', color: '#94a3b8', fontWeight: 600
+                                            }}>+ {m}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div style={{ 
+                                    position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px',
+                                    background: barColor, opacity: 0.15, filter: 'blur(50px)', borderRadius: '50%'
+                                }} />
+                            </motion.div>
+
+                            {/* Saved Jobs Quicklist */}
+                            <div style={{ 
+                                background: 'white', borderRadius: '40px', padding: '2rem',
+                                border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)'
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                                    <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0f172a' }}>Saved Roles</h3>
+                                    <Link href="/jobs" style={{ fontSize: '0.85rem', color: '#2563eb', fontWeight: 800 }}>Visit List</Link>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                                    {data?.savedJobs && data.savedJobs.length > 0 ? (
+                                        data.savedJobs.slice(0, 3).map((job, i) => (
+                                            <Link href={`/jobs/${job._id}`} key={job._id}>
+                                                <motion.div 
+                                                    whileHover={{ x: 5 }}
+                                                    style={{ 
+                                                        display: 'flex', gap: '1rem', alignItems: 'center', 
+                                                        borderBottom: i !== 2 ? '1px solid #f1f5f9' : 'none',
+                                                        paddingBottom: i !== 2 ? '1.25rem' : '0' 
+                                                    }}
+                                                >
+                                                    <div style={{ 
+                                                        width: 44, height: 44, borderRadius: '12px', background: '#f8fafc',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        fontSize: '1rem', fontWeight: 900
+                                                    }}>{job.company.charAt(0)}</div>
+                                                    <div>
+                                                        <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0f172a', marginBottom: '0.15rem' }}>{job.title}</h4>
+                                                        <p style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>{job.company}</p>
+                                                    </div>
+                                                </motion.div>
+                                            </Link>
+                                        ))
+                                    ) : (
+                                        <p style={{ color: '#94a3b8', fontSize: '0.9rem', textAlign: 'center', padding: '1rem 0' }}>No saved jobs yet.</p>
+                                    )}
+                                </div>
+                            </div>
+                        </aside>
+                    </div>
+                    
+                    {/* ── Recommended Section ── */}
+                    {(data?.recommendedJobs?.length ?? 0) > 0 && (
+                        <section style={{ marginTop: '5rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2.5rem' }}>
+                                <div>
+                                    <h2 style={{ fontSize: '1.75rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.04em' }}>Curated Recommendations</h2>
+                                    <p style={{ color: '#64748b', fontWeight: 500, fontSize: '1.1rem' }}>Based on your profile and search history.</p>
+                                </div>
+                                <Link href="/jobs">
+                                    <Button variant="outline" size="sm">Explore Insights</Button>
+                                </Link>
+                            </div>
+                            <div style={{ 
+                                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
+                                gap: '1.5rem' 
+                            }}>
+                                {data!.recommendedJobs.map((job, i) => (
+                                    <motion.div 
+                                        key={job._id}
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        whileInView={{ opacity: 1, scale: 1 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: i * 0.1 }}
+                                        whileHover={{ y: -10 }}
+                                        style={{
+                                            padding: '2rem', borderRadius: '32px', background: 'white',
+                                            border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)',
+                                            display: 'flex', flexDirection: 'column', gap: '1rem',
+                                            transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                            <div style={{ 
+                                                width: 50, height: 50, borderRadius: '14px', background: 'var(--accent-soft)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                fontSize: '1.2rem', fontWeight: 900, color: '#2563eb'
+                                            }}>{job.company.charAt(0)}</div>
+                                            <div style={{ 
+                                                padding: '0.4rem 0.8rem', borderRadius: '10px', 
+                                                background: '#f8fafc', fontSize: '0.75rem', fontWeight: 800, color: '#475569' 
+                                            }}>{job.type}</div>
+                                        </div>
+                                        <h3 style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.02em' }}>{job.title}</h3>
+                                        <p style={{ color: '#64748b', fontSize: '0.95rem', fontWeight: 600 }}>{job.company} · {job.location}</p>
+                                        <div style={{ marginTop: 'auto', paddingTop: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <span style={{ fontSize: '1rem', fontWeight: 800, color: '#059669' }}>{job.salary}</span>
+                                            <Link href={`/jobs/${job._id}`}>
+                                                <motion.button 
+                                                    whileHover={{ x: 3 }}
+                                                    style={{ background: 'none', border: 'none', color: '#2563eb', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                                >
+                                                    View <ArrowRight size={16} />
+                                                </motion.button>
+                                            </Link>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </section>
+                    )}
+                </motion.div>
+            </div>
+
+            <style jsx global>{`
+                @keyframes pulse {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                }
+                .spin {
+                    animation: spin 1s linear infinite;
+                }
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                @media (max-width: 1024px) {
+                    div[style*="grid-template-columns: 1fr 340px"] {
+                        grid-template-columns: 1fr !important;
+                    }
+                    aside {
+                        order: -1;
+                        flex-direction: row !important;
+                        flex-wrap: wrap;
+                    }
+                    aside > div, aside > motion.div {
+                        flex: 1;
+                        min-width: 300px;
+                    }
+                }
+                @media (max-width: 768px) {
+                    aside {
+                        flex-direction: column !important;
+                    }
+                    header {
+                        flex-direction: column !important;
+                        align-items: flex-start !important;
+                    }
+                }
+            `}</style>
         </div>
     );
 }

@@ -1,12 +1,21 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const fs = require('fs');
+const path = require('path');
+
+const logFile = path.join(__dirname, 'debug.log');
+const log = (msg) => {
+    const timestamp = new Date().toISOString();
+    fs.appendFileSync(logFile, `[${timestamp}] ${msg}\n`);
+    console.log(msg);
+};
+
+log('Backend starting...');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const cookieParser = require('cookie-parser');
-const path = require('path');
-const fs = require('fs');
 const connectDB = require('./config/db');
 const mongoose = require('mongoose');
 
@@ -29,10 +38,12 @@ try {
 dotenv.config();
 
 // Connect to database
+log('Connecting to database...');
 connectDB();
 
 const app = express();
 
+log('Middleware setup...');
 // Security Middleware
 app.use(helmet()); // Security headers
 
@@ -177,9 +188,10 @@ const PORT = process.env.PORT || 5000;
 
 // Only listen if run directly (not imported as a module for Vercel)
 if (require.main === module) {
+    log(`Attempting to listen on port ${PORT}...`);
     app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-        console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+        log(`Server running on port ${PORT}`);
+        log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     });
 }
 

@@ -16,7 +16,7 @@ interface AuthContextType {
     token: string | null;
     loading: boolean;
     error: string | null;
-    login: (email: string, password: string) => Promise<void>;
+    login: (email: string, password: string) => Promise<User>;
     signup: (name: string, email: string, password: string, role: string) => Promise<User | void>;
     logout: () => void;
     clearError: () => void;
@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         validateStoredAuth();
     }, []);
 
-    const login = async (email: string, password: string) => {
+    const login = async (email: string, password: string): Promise<User> => {
         try {
             setError(null);
             setLoading(true);
@@ -71,12 +71,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             localStorage.setItem('user', JSON.stringify(userData));
             localStorage.setItem('token', authToken);
-            setUser(userData);
+            setUser(userData as User);
             setToken(authToken);
+            return userData as User;
         } catch (err: any) {
             const message = err.response?.data?.message || 'Login failed';
             setError(message);
-            throw new Error(message);
+            throw err; // re-throw original so callers can read err.response
         } finally {
             setLoading(false);
         }
@@ -101,9 +102,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setToken(authToken);
             return userData;
         } catch (err: any) {
-            const message = err.response?.data?.message || 'Signup failed';
+            const message = err.response?.data?.message || err.message || 'Signup failed';
             setError(message);
-            throw new Error(message);
+            throw err; // re-throw original so callers can read err.response
         } finally {
             setLoading(false);
         }

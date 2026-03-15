@@ -300,6 +300,37 @@ const forgotPassword = asyncHandler(async (req, res) => {
     });
 });
 
+// @desc    Update password
+// @route   PUT /api/auth/update-password
+// @access  Private
+const updatePassword = asyncHandler(async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+        res.status(400);
+        throw new Error('Please provide current and new passwords');
+    }
+
+    const user = await User.findById(req.user._id).select('+password');
+
+    if (user && (await user.matchPassword(currentPassword))) {
+        // Password strength validation for new password
+        const passwordError = validatePassword(newPassword);
+        if (passwordError) {
+            res.status(400);
+            throw new Error(passwordError);
+        }
+
+        user.password = newPassword;
+        await user.save();
+
+        res.status(200).json({ success: true, message: 'Password updated successfully' });
+    } else {
+        res.status(401);
+        throw new Error('Invalid current password');
+    }
+});
+
 module.exports = {
     registerUser,
     loginUser,
@@ -308,4 +339,5 @@ module.exports = {
     refreshToken,
     logoutUser,
     forgotPassword,
+    updatePassword,
 };

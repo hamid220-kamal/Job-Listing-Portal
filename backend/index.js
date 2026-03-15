@@ -78,22 +78,13 @@ app.use('/api/auth/validate-token', tokenLimiter);
 
 // CORS Configuration - whitelist specific origins
 const corsOptions = {
-    origin: function (origin, callback) {
-        const whitelist = [
-            'http://localhost:3000',
-            'http://localhost:3001',
-            'https://job-listing-portal-ten-omega.vercel.app',
-            process.env.FRONTEND_URL // Add your production domain
-        ].filter(Boolean);
-
-        // Allow requests with no origin (e.g., Postman, server-to-server)
-        // Also allow Vercel preview deployments
-        if (!origin || whitelist.indexOf(origin) !== -1 || (origin && origin.endsWith('.vercel.app'))) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://127.0.0.1:3000',
+        'https://job-listing-portal-ten-omega.vercel.app',
+        process.env.FRONTEND_URL
+    ].filter(Boolean),
     credentials: true, // Allow cookies
     optionsSuccessStatus: 200
 };

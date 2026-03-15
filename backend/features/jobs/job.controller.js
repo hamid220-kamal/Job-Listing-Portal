@@ -8,7 +8,7 @@ const Job = require('./job.model');
 const getJobs = asyncHandler(async (req, res) => {
     const { type, location, query, page = 1, limit = 12 } = req.query;
     
-    let filter: any = {};
+    let filter = {};
     if (type) filter.type = type;
     if (req.query.category) filter.category = req.query.category;
     if (location) filter.location = { $regex: location, $options: 'i' };

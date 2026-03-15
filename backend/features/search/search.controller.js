@@ -9,7 +9,7 @@ const searchJobs = asyncHandler(async (req, res) => {
     const { keyword, location, type, sort, page = 1, limit = 20 } = req.query;
     
     // Robust query for active or legacy jobs
-    const query: any = {
+    const query = {
         $or: [
             { status: 'active' },
             { status: { $exists: false } },
@@ -42,13 +42,13 @@ const searchJobs = asyncHandler(async (req, res) => {
     }
 
     // Sort options
-    let sortOption: any = { createdAt: -1 };
+    let sortOption = { createdAt: -1 };
     if (sort === 'oldest') sortOption = { createdAt: 1 };
     if (sort === 'title') sortOption = { title: 1 };
 
     // Pagination
-    const pageNum = Math.max(1, parseInt(page as string) || 1);
-    const limitNum = Math.max(1, parseInt(limit as string) || 20);
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const limitNum = Math.max(1, parseInt(limit) || 20);
     const skip = (pageNum - 1) * limitNum;
 
     const [jobs, total] = await Promise.all([

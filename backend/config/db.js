@@ -24,10 +24,10 @@ const connectDB = async () => {
 
     // Connection options
     const options = {
-        serverSelectionTimeoutMS: 5000,
-        connectTimeoutMS: 10000,
+        serverSelectionTimeoutMS: 30000, // Increased to 30s to allow Atlas to respond
+        connectTimeoutMS: 30000,        // Increased to 30s
         socketTimeoutMS: 45000,
-        bufferCommands: false, // Disable buffering to fail fast if not connected
+        bufferCommands: false, 
     };
 
     const cloudURI = process.env.MONGO_URI;
@@ -48,17 +48,23 @@ const connectDB = async () => {
             if (typeof log !== 'undefined') log(`✅ MongoDB Connected to Cloud: ${conn.connection.host}`);
             return conn;
         } catch (error) {
+            console.error('--- Cloud Connection Error Detail ---');
+            console.error(`Error Code: ${error.code || 'N/A'}`);
+            console.error(`Error Name: ${error.name}`);
+            console.error(`Error Message: ${error.message}`);
+            
             if (error.message.includes('ETIMEDOUT')) {
                 console.error('❌ Cloud Connection Timeout: The server took too long to respond.');
             } else if (error.message.includes('ECONNREFUSED')) {
                 console.error('❌ Cloud Connection Refused: Ensure the host and port are correct.');
             } else if (error.message.includes('authentication failed')) {
                 console.error('❌ Cloud Auth Failed: Check your username and password in MONGO_URI.');
-            } else {
-                console.error(`❌ Cloud Connection Failed: ${error.message}`);
+            } else if (error.message.includes('MongooseServerSelectionError')) {
+                console.error('❌ Server Selection Error: This often means IP is not whitelisted or firewall is blocking.');
             }
+            
             if (isForced) {
-                console.error('🛑 specific cloud connection requested. Exiting...');
+                console.error('🛑 Specific cloud connection requested. Exiting...');
                 process.exit(1);
             }
             throw error; // Rethrow to trigger fallback

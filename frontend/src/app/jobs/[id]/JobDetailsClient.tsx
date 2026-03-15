@@ -40,7 +40,7 @@ export default function JobDetailsClient() {
         e.preventDefault();
         setSubmitting(true);
         try {
-            await api.post(`/jobs/${id}/apply`, applicationData);
+            await api.post(`/applications/${id}`, applicationData);
             setSuccess(true);
             toast.success("Application submitted successfully!");
         } catch (error: any) {

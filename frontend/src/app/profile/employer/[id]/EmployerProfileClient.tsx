@@ -10,7 +10,8 @@ import {
     Building2, MapPin, Globe, Mail, Phone, Users, 
     Briefcase, ExternalLink, Linkedin, Twitter, 
     Facebook, LayoutDashboard, ChevronRight,
-    Search, Sparkles, CheckCircle2, TrendingUp
+    Search, Sparkles, CheckCircle2, TrendingUp,
+    Clock
 } from 'lucide-react';
 
 interface Profile {
@@ -305,7 +306,7 @@ export default function EmployerProfileClient({ profile: initialProfile, id }: {
                 @media (max-width: 768px) {
                     h1 { font-size: 2.25rem !important; }
                 }
-            `}`}</style>
+            `}</style>
         </div>
     );
 }

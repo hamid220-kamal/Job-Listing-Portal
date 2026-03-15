@@ -107,4 +107,32 @@ const updateApplicationStatus = asyncHandler(async (req, res) => {
     res.status(200).json(populated);
 });
 
-module.exports = { applyJob, getMyApplications, getJobApplications, updateApplicationStatus };
+// @desc    Get all applications for an employer (across all their jobs)
+// @route   GET /api/applications/employer
+// @access  Private (Employer only)
+const getEmployerApplications = asyncHandler(async (req, res) => {
+    if (!req.user || req.user.role !== 'employer') {
+        res.status(403);
+        throw new Error('Only employers can view applications');
+    }
+
+    // First find all jobs by this employer
+    const employerJobs = await Job.find({ postedBy: req.user._id || req.user.id }).select('_id');
+    const jobIds = employerJobs.map(j => j._id);
+
+    const apps = await Application.find({ job: { $in: jobIds } })
+        .populate('applicant', 'name email avatar headline skills')
+        .populate('job', 'title location type status')
+        .sort('-appliedAt')
+        .lean();
+
+    res.status(200).json(apps);
+});
+
+module.exports = { 
+    applyJob, 
+    getMyApplications, 
+    getJobApplications, 
+    updateApplicationStatus,
+    getEmployerApplications
+};
